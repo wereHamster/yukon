@@ -1,16 +1,15 @@
 
-
+import os
 import SCons.Defaults
 import SCons.Tool
 import SCons.Util
 
-
 envBase = Environment(
 	CC = 'gcc',
-	CPPPATH = ['#include', '/usr/include/ffmpeg'],
+	CPPPATH = ['#include'],
 	CCFLAGS = ['-std=c99', '-pipe', '-O3'],
 	LINKFLAGS = ['', ''],
-	LIBS = ['dl', 'pthread', 'GL', 'GLU', 'X11'],
+	LIBS = ['dl', 'pthread'],
 	AS = 'yasm'
 )
 
@@ -43,7 +42,6 @@ yukonCoreSource		= [
 	'yukonCore/yCompressor.c'
 ]
 
-
 yukonPreloadSource 	= [
 	'yukonPreload/yEngine.c',
 	'yukonPreload/yHooks.c',
@@ -62,10 +60,14 @@ yukonConvertSource	= [
 for arch, env in envArray.items():
 	env.BuildDir('build/'+arch+'/', 'src')
 	mmEnv = env.Copy()
-	mmEnv.Append(LIBS = [ ])
+	mmEnv.Append(LIBS = ['X11', 'GL'])
+	env.Append(LIBS = ['FG', 'X13'])
+	env.Append(LIBPATH = os.getenv('LIBPATH'))
 	
 	asm = [ 'build/'+arch+'/asm/'+arch+'/huffman.asm' ]
 	lib = env.SharedLibrary(target = 'build/'+arch+'/yPreload.'+arch+'.so', source = [ 'build/'+arch+'/'+s for s in yukonPreloadSource ] + asm, SHLIBPREFIX='')
 	replay = mmEnv.Program(target = 'build/'+arch+'/yReplay', source = [ 'build/'+arch+'/'+s for s in yukonReplaySource ] + asm)
-	server = env.Program(target = 'build/'+arch+'/yServer', source = 'build/'+arch+'/yukonServer/main.c')
+	server = Program(target = 'build/'+arch+'/yServer', source = 'build/'+arch+'/yukonServer/main.c')
 	env.Alias(arch, [ lib, replay, server ])
+
+Default()

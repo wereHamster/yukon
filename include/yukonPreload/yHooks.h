@@ -4,12 +4,6 @@
 
 #include <yukonPreload/yEngine.h>
 
-/***
- * libc
- */
-typedef void *	(*type_dlopen)					(const char *filename, int flag);
-typedef void *	(*type_dlsym)					(void *handle, const char *symbol);
-
 
 /***
  * X11

@@ -1,10 +1,8 @@
 
 #include <yukonPreload/yHooks.h>
 
+static void *x11Handle;
 static void *glHandle;
-
-static type_dlopen orig_dlopen;
-static type_dlsym orig_dlsym;
 
 static type_glXGetProcAddressARB orig_glXGetProcAddressARB;
 static type_glXSwapBuffers orig_glXSwapBuffers;
@@ -43,36 +41,27 @@ static void yHooksError(const char *hookName)
 __attribute__ ((constructor))
 static void yHooksConstructor()
 {
-	glHandle = dlopen("libGL.so.1", RTLD_LAZY | RTLD_GLOBAL);
-	
-#define loadHook(hookName)                                            \
+#define loadHook(hookName, src)                                       \
 	orig_##hookName = (type_##hookName) dlsym(RTLD_NEXT, #hookName);  \
 	if (orig_##hookName == 0) {                                       \
 		yHooksError(#hookName);                                       \
 	}                                                                 \
 
-	loadHook(dlopen);
-    loadHook(dlsym);
-    
+	loadHook(glXGetProcAddressARB, gl);
+    loadHook(glXSwapBuffers, gl);
 
-	loadHook(glXGetProcAddressARB);
-    loadHook(glXSwapBuffers);
+    loadHook(XNextEvent, x11);
+    loadHook(XPeekEvent, x11);
+    loadHook(XWindowEvent, x11);
+    loadHook(XCheckWindowEvent, x11);
+    loadHook(XMaskEvent, x11);
+    loadHook(XCheckMaskEvent, x11);
+    loadHook(XCheckTypedEvent, x11);
+    loadHook(XCheckTypedWindowEvent, x11);
 
-    loadHook(XNextEvent);
-    loadHook(XPeekEvent);
-    loadHook(XWindowEvent);
-    loadHook(XCheckWindowEvent);
-    loadHook(XMaskEvent);
-    loadHook(XCheckMaskEvent);
-    loadHook(XCheckTypedEvent);
-    loadHook(XCheckTypedWindowEvent);
-
-    loadHook(XIfEvent);
-    loadHook(XCheckIfEvent);
-    loadHook(XPeekIfEvent);
-    loadHook(XNextEvent);
-    loadHook(XNextEvent);
-    loadHook(XNextEvent);
+    loadHook(XIfEvent, x11);
+    loadHook(XCheckIfEvent, x11);
+    loadHook(XPeekIfEvent, x11);
 
 #undef loadHook
 
@@ -89,33 +78,8 @@ static void yHooksConstructor()
 __attribute__ ((destructor))
 static void yHooksDestructor()
 {
-	dlclose(glHandle);
 	printf("yukon hooks cleaned up !\n");
 }
-
-/*
-void *dlopen(const char *filename, int flag)
-{
-	printf("opening library: %p\n", orig_dlopen);
-	if (filename) {
-	if (strcmp(filename, "libGL.so") == 0) {
-		filename = "libFG.so";
-		printf("opening fake OpenGL library\n");
-	} else if (strcmp(filename, "libGL.so.2") == 0) {
-		filename = "libFG.so.1";
-		printf("opening fake OpenGL library\n");
-	}
-	}
-	
-	return orig_dlopen(filename, flag);
-}
-
-void *dlsym(void *handle, const char *symbol)
-{
-	return orig_dlsym(handle, symbol);
-}
-*/
-
 
 void glXSwapBuffers(Display * dpy, GLXDrawable drawable)
 {

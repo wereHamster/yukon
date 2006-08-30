@@ -36,9 +36,6 @@
 #include <X11/Xlib.h>
 #include <X11/keysym.h>
 
-#include <avcodec.h>
-#include <avformat.h>
-
 #include <yukonCore/yTime.h>
 #include <yukonCore/yBuffer.h>
 #include <yukonCore/yConfig.h>

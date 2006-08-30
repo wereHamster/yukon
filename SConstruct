@@ -69,5 +69,3 @@ for arch, env in envArray.items():
 	replay = mmEnv.Program(target = 'build/'+arch+'/yReplay', source = [ 'build/'+arch+'/'+s for s in yukonReplaySource ] + asm)
 	server = Program(target = 'build/'+arch+'/yServer', source = 'build/'+arch+'/yukonServer/main.c')
 	env.Alias(arch, [ lib, replay, server ])
-
-Default()

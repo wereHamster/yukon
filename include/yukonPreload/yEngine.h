@@ -31,6 +31,7 @@ struct _yEngine {
 			} drawableSize;
 			double captureInterval;
 			long downScale;
+			uint64_t offset[2];
 		} video;
 	} staticInfo;
 

@@ -79,3 +79,23 @@ char *yConfigScale(void)
 	
 	return ret;
 }
+
+void yConfigInsets(uint64_t v[4])
+{
+	char *optionValue = 0;
+	
+	v[0] = v[1] = v[2] = v[3] = 0;
+	
+	optionValue = yConfigOption("insets");
+	if (optionValue) {
+		unsigned int ins[4];
+		int success = sscanf(optionValue, "%u %u %u %u", &ins[0], &ins[1], &ins[2], &ins[3]);
+		if (success) {
+			v[0] = ins[0];
+			v[1] = ins[1];
+			v[2] = ins[2];
+			v[3] = ins[3];
+		}
+		free(optionValue);
+	}
+}

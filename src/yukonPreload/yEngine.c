@@ -339,10 +339,31 @@ static void yEngineStart(Display *dpy, GLXDrawable drawable)
 		return;
 	}
 	
-	width = width&(~3);
-	height = height&(~3);
-
 	engine = yEngineCreate(dpy, drawable);
+	
+	uint64_t insets[4];
+	yConfigInsets(insets);
+	
+	printf("yEngineStart(): %p, insets: %llu:%llu:%llu:%llu\n", engine, insets[0], insets[1], insets[2], insets[3]);
+	
+	width = width - insets[1] - insets[3];
+	height = height - insets[0] - insets[2];
+	
+	char *scale = yConfigScale();
+	engine->staticInfo.video.downScale = strcmp(scale, "full");
+	printf("scale: %s\n", scale);
+	free(scale);
+	
+	if (engine->staticInfo.video.downScale) {
+		width &= ~(3);
+		height &= ~(3);
+	} else {
+		width &= ~(1);
+		height &= ~(1);
+	}
+	
+	engine->staticInfo.video.offset[0] = insets[3];
+	engine->staticInfo.video.offset[1] = insets[2];
 	
 	char *serverString = yConfigServer();
 	unsigned int serverPort;
@@ -374,12 +395,7 @@ static void yEngineStart(Display *dpy, GLXDrawable drawable)
 	engine->dpy = dpy;
 	engine->drawable = drawable;
 
-	engine->dataBuffers.video.videoBuffer = yBufferCreate(sizeof(yEngineBuffer) + width * height * 4, 16);
-
-	char *scale = yConfigScale();
-	engine->staticInfo.video.downScale = strcmp(scale, "full");
-	printf("scale: %s\n", scale);
-	free(scale);
+	engine->dataBuffers.video.videoBuffer = yBufferCreate(sizeof(yEngineBuffer) + width * height * 4, 16);	
 	
 	engine->staticInfo.video.drawableSize.width = width;
 	engine->staticInfo.video.drawableSize.height = height;
@@ -558,7 +574,9 @@ void yEngineCapture(Display *dpy, GLXDrawable drawable)
 			yEngineBuffer *videoBuffer = yBufferHead(engine->dataBuffers.video.videoBuffer);
 
 			videoBuffer->timeStamp = timeCurrent;
-			glReadPixels(0, 0, width, height, GL_BGRA, GL_UNSIGNED_BYTE, &videoBuffer->bufferData[0]);
+			uint64_t x = engine->staticInfo.video.offset[0];
+			uint64_t y = engine->staticInfo.video.offset[1];
+			glReadPixels(x, y, width, height, GL_BGRA, GL_UNSIGNED_BYTE, &videoBuffer->bufferData[0]);
 
 			yBufferHeadAdvance(engine->dataBuffers.video.videoBuffer);
 		//	printf("timeElapsed.usec: %llu\n", timeElapsed.usec);

@@ -20,7 +20,7 @@ static type_XIfEvent orig_XIfEvent;
 static type_XCheckIfEvent orig_XCheckIfEvent;
 static type_XPeekIfEvent orig_XPeekIfEvent;
 
-extern char *captureOverride;
+extern char *yukonOverride;
 
 static void yHooksError(const char *hookName)
 {
@@ -67,9 +67,9 @@ static void yHooksConstructor()
 
     printf("yukon hooks established !\n");
 
-    captureOverride = getenv("yukonOverride");
-    if (captureOverride) {
-        printf("yukonOverride enabled, capturing all windows !\n");
+    yukonOverride = getenv("yukonOverride");
+    if (yukonOverride) {
+        printf("yukonOverride enabled, magic key combination will start capturing on all windows !\n");
     }
     
     yCompressorInit();

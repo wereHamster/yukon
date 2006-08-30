@@ -3,7 +3,8 @@
 
 static yEngine *engineRegistry[64];
 
-char *captureOverride = 0;
+char *capturingEnabled = 0;
+char *yukonOverride = 0;
 
 static void scaleFrameFast(uint32_t *inBuffer, uint32_t *outBuffer, int width, int height)
 {
@@ -469,18 +470,31 @@ int yEngineEvent(Display *dpy, XEvent *event)
   		}
 
 		if (checkKeyCode(dpy, event, XK_F1)) {
-			if (keyModMap[0] && keyModMap[2]) {
+			if (yukonOverride) {
+				printf("doCapture: start by override\n");
+				capturingEnabled = yukonOverride;
+				return 1;
+			} else if (keyModMap[0] && keyModMap[2]) {
 				printf("doCapture: start\n");
 				yEngineStart(dpy, event->xkey.window);
 				return 1;
 			}
   		}
 		if (checkKeyCode(dpy, event, XK_F2)) {
-			if (keyModMap[0] && keyModMap[2]) {
+			if (yukonOverride) {
+				printf("doCapture: end by override\n");
+				capturingEnabled = 0;
+				for (int registryIndex = 0; registryIndex < 64; ++registryIndex) {
+					if (engineRegistry[registryIndex]) {
+						yEngineStop(engineRegistry[registryIndex]->dpy, engineRegistry[registryIndex]->drawable);
+					}
+				}
+				return 1;
+			} else if (keyModMap[0] && keyModMap[2]) {
 				printf("doCapture: end\n");
 				yEngineStop(dpy, event->xkey.window);
 				return 1;
-			}
+			} 
   		}
 		break;
 	case KeyRelease:
@@ -524,7 +538,7 @@ void yEngineCapture(Display *dpy, GLXDrawable drawable)
 
 	yEngine *engine = yEngineLocate(dpy, drawable);
 	if (engine == 0) {
-		if (captureOverride == 0) {
+		if (capturingEnabled == 0) {
 			return;
 		}
 

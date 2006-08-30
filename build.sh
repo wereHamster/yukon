@@ -26,7 +26,6 @@ CopyLib $1 libGL.so libFG.so
 CopyLib $1 libX11.so libX13.so
 
 echo "Building yukon..."
-scons -s -c .
 LIBPATH=$HOME/.preload/$1 scons -s $2
 
 echo "Restoring libraries..."

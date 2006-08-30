@@ -52,11 +52,6 @@ yukonReplaySource	= [
 	'yukonReplay/colorspace.c'
 ] + yukonCoreSource
 
-yukonConvertSource	= [
-	'yukonConvert/main.c'
-] + yukonCoreSource
-
-
 for arch, env in envArray.items():
 	env.BuildDir('build/'+arch+'/', 'src')
 	mmEnv = env.Copy()
@@ -69,3 +64,5 @@ for arch, env in envArray.items():
 	replay = mmEnv.Program(target = 'build/'+arch+'/yReplay', source = [ 'build/'+arch+'/'+s for s in yukonReplaySource ] + asm)
 	server = Program(target = 'build/'+arch+'/yServer', source = 'build/'+arch+'/yukonServer/main.c')
 	env.Alias(arch, [ lib, replay, server ])
+
+Default()

@@ -88,7 +88,6 @@ static void resampleFrameFast(uint32_t *inBuffer, uint8_t *outBuffer[3], int wid
 				"paddw %%mm2, %%mm5			\n\t"
 				"paddw %%mm3, %%mm5			\n\t"
 				"paddw %%mm4, %%mm5			\n\t"
-				"psrlw $2, %%mm5			\n\t"
 				
 				:
 				: "m" (*(src+0)),
@@ -104,7 +103,7 @@ static void resampleFrameFast(uint32_t *inBuffer, uint8_t *outBuffer[3], int wid
 				"pmaddwd %%mm7, %%mm1		\n\t"
 				"movq %%mm1, %%mm0			\n\t"
 				"psrlq $32, %%mm0			\n\t"
-				"paddw %%mm0, %%mm1			\n\t"
+				"paddd %%mm0, %%mm1			\n\t"
 				"movd %%mm1, %%eax			\n\t"
 				"shr $8, %%eax				\n\t"
 				"add $16, %%eax				\n\t"
@@ -113,7 +112,7 @@ static void resampleFrameFast(uint32_t *inBuffer, uint8_t *outBuffer[3], int wid
 				"pmaddwd %%mm7, %%mm2		\n\t"
 				"movq %%mm2, %%mm0			\n\t"
 				"psrlq $32, %%mm0			\n\t"
-				"paddw %%mm0, %%mm2			\n\t"
+				"paddd %%mm0, %%mm2			\n\t"
 				"movd %%mm2, %%eax			\n\t"
 				"shr $8, %%eax				\n\t"
 				"add $16, %%eax				\n\t"
@@ -122,7 +121,7 @@ static void resampleFrameFast(uint32_t *inBuffer, uint8_t *outBuffer[3], int wid
 				"pmaddwd %%mm7, %%mm3		\n\t"
 				"movq %%mm3, %%mm0			\n\t"
 				"psrlq $32, %%mm0			\n\t"
-				"paddw %%mm0, %%mm3			\n\t"
+				"paddd %%mm0, %%mm3			\n\t"
 				"movd %%mm3, %%eax			\n\t"
 				"shr $8, %%eax				\n\t"
 				"add $16, %%eax				\n\t"
@@ -131,7 +130,7 @@ static void resampleFrameFast(uint32_t *inBuffer, uint8_t *outBuffer[3], int wid
 				"pmaddwd %%mm7, %%mm4		\n\t"
 				"movq %%mm4, %%mm0			\n\t"
 				"psrlq $32, %%mm0			\n\t"
-				"paddw %%mm0, %%mm4			\n\t"
+				"paddd %%mm0, %%mm4			\n\t"
 				"movd %%mm4, %%eax			\n\t"
 				"shr $8, %%eax				\n\t"
 				"add $16, %%eax				\n\t"
@@ -152,9 +151,9 @@ static void resampleFrameFast(uint32_t *inBuffer, uint8_t *outBuffer[3], int wid
 				"pmaddwd %%mm7, %%mm5		\n\t"
 				"movq %%mm5, %%mm0			\n\t"
 				"psrlq $32, %%mm0			\n\t"
-				"paddw %%mm0, %%mm5			\n\t"
+				"paddd %%mm0, %%mm5			\n\t"
 				"movd %%mm5, %%eax			\n\t"
-				"shr $8, %%eax				\n\t"
+				"shr $10, %%eax				\n\t"
 				"add $128, %%eax			\n\t"
 				"mov %%al, %0				\n\t"
 				
@@ -169,9 +168,9 @@ static void resampleFrameFast(uint32_t *inBuffer, uint8_t *outBuffer[3], int wid
 				"pmaddwd %%mm7, %%mm6		\n\t"
 				"movq %%mm6, %%mm0			\n\t"
 				"psrlq $32, %%mm0			\n\t"
-				"paddw %%mm0, %%mm6			\n\t"
+				"paddd %%mm0, %%mm6			\n\t"
 				"movd %%mm6, %%eax			\n\t"
-				"shr $8, %%eax				\n\t"
+				"shr $10, %%eax				\n\t"
 				"add $128, %%eax			\n\t"
 				"mov %%al, %0				\n\t"
 				
@@ -345,6 +344,8 @@ static void yEngineStart(Display *dpy, GLXDrawable drawable)
 	uint64_t insets[4];
 	yConfigInsets(insets);
 	
+	printf("yEngineStart(): %p - 0x%08x\n", dpy, drawable);
+	
 	printf("yEngineStart(): %p, insets: %llu:%llu:%llu:%llu\n", engine, insets[0], insets[1], insets[2], insets[3]);
 	
 	width = width - insets[1] - insets[3];
@@ -494,7 +495,7 @@ int yEngineEvent(Display *dpy, XEvent *event)
 				printf("doCapture: end\n");
 				yEngineStop(dpy, event->xkey.window);
 				return 1;
-			} 
+			}
   		}
 		break;
 	case KeyRelease:

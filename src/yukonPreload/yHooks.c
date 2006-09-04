@@ -1,9 +1,6 @@
 
 #include <yukonPreload/yHooks.h>
 
-static void *x11Handle;
-static void *glHandle;
-
 static type_glXGetProcAddressARB orig_glXGetProcAddressARB;
 static type_glXSwapBuffers orig_glXSwapBuffers;
 

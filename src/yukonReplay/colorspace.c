@@ -77,12 +77,12 @@ NAME(uint8_t * x_ptr, int x_stride,	\
 	x_ptr[(ROW)*x_stride+(C3)] = MAX(0, MIN(255, (rgb_y + b_u##UV_ROW) >> SCALEBITS_OUT));	\
 	x_ptr[(ROW)*x_stride+(C2)] = MAX(0, MIN(255, (rgb_y - g_uv##UV_ROW) >> SCALEBITS_OUT));	\
 	x_ptr[(ROW)*x_stride+(C1)] = MAX(0, MIN(255, (rgb_y + r_v##UV_ROW) >> SCALEBITS_OUT));	\
-	if ((SIZE)>3) x_ptr[(ROW)*x_stride+(C4)] = 0;									\
+	if ((SIZE)>3) x_ptr[(ROW)*x_stride+(C4)] = 0xff;									\
 	rgb_y = RGB_Y_tab[ y_ptr[(ROW)*y_stride + 1] ];									\
 	x_ptr[(ROW)*x_stride+(SIZE)+(C3)] = MAX(0, MIN(255, (rgb_y + b_u##UV_ROW) >> SCALEBITS_OUT));	\
 	x_ptr[(ROW)*x_stride+(SIZE)+(C2)] = MAX(0, MIN(255, (rgb_y - g_uv##UV_ROW) >> SCALEBITS_OUT));	\
 	x_ptr[(ROW)*x_stride+(SIZE)+(C1)] = MAX(0, MIN(255, (rgb_y + r_v##UV_ROW) >> SCALEBITS_OUT));	\
-	if ((SIZE)>3) x_ptr[(ROW)*x_stride+(SIZE)+(C4)] = 0;
+	if ((SIZE)>3) x_ptr[(ROW)*x_stride+(SIZE)+(C4)] = 0xff;
 
 
 #define YV12_TO_RGB_ROW(SIZE,C1,C2,C3,C4) 	/* nothing */
@@ -110,7 +110,7 @@ NAME(uint8_t * x_ptr, int x_stride,	\
 
 
 
-MAKE_COLORSPACE(yv12_to_rgba_c,    4,2,2, YV12_TO_RGB,    0,1,2,3)
+MAKE_COLORSPACE(yv12_to_rgba_c,    4,2,2, YV12_TO_RGB,    2,1,0,3)
 
 
 /* initialize rgb lookup tables */

@@ -184,8 +184,8 @@ int main(int argc, char *argv[]) {
 			currentPosition += cSize;
 		}
 
-		yv12_to_rgba_c(rgbFrame, width * 4, yuvPlanes[0], yuvPlanes[2], yuvPlanes[1], width, width / 2, width, height, 0);
-		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_BGRA, GL_UNSIGNED_BYTE, rgbFrame);
+		yv12_to_rgba_c(rgbFrame, width * 4, yuvPlanes[0], yuvPlanes[1], yuvPlanes[2], width, width / 2, width, height, 0);
+		glTexImage2D(GL_TEXTURE_2D, 0, 4, width, height, 0, GL_BGRA, GL_UNSIGNED_BYTE, rgbFrame);
 
 		gettimeofday(&currentTime, 0);
 		uint64_t now = currentTime.tv_sec * 1000000 + currentTime.tv_usec;

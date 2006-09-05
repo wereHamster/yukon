@@ -194,18 +194,34 @@ static void resampleFrameFast(uint32_t *inBuffer, uint8_t *outBuffer[3], int wid
 	__asm__ __volatile__ ("emms");
 }
 
-static void writePlane(yEngine *engine, uint8_t *plane, int length)
+// median(L,T,L+T-LT)
+static uint8_t median(uint8_t v1, uint8_t v2, uint8_t v3)
+{
+	return ( v1 + v2 + v3 ) / 3;
+}
+
+static void writePlane(yEngine *engine, uint8_t *plane, int width, int height)
 {
 	static uint32_t huffBuffer[1280*1024*8];
-	static uint8_t tmp[1280*1024*4];
+	static uint8_t tmp[1280*1024*8];
+	
+#define src(x,y) ( plane[(y)*width+(x)] )
 	
 	tmp[0] = plane[0];
-	for (int i = 1; i < length; ++i) {
-		tmp[i] = plane[i] - plane[i-1];
+	for (int x = 1; x < width; ++x) {
+		tmp[x] = src(x,0) - median(src(x-1,0), 0, src(x-1,0));
 	}
 	
+	for (int y = 1; y < height; ++y) {
+		tmp[y * width] = src(0,y) - median(0, src(0,y-1), src(0,y-1));
+		for (int x = 1; x < width; ++x) {
+			tmp[y * width + x] = src(x,y) - median(src(x-1,y), src(x,y-1), src(x-1,y)+src(x,y-1)-src(x-1,y-1));
+		}
+	}
+#undef src
+	
 	uint32_t *start = huffBuffer;
-	uint32_t *end = huffCompress(huffBuffer, tmp, tmp + length, huffEncodeTable);
+	uint32_t *end = huffCompress(huffBuffer, tmp, tmp + width * height, huffEncodeTable);
 	uint64_t size = (end - start) * 4;
 	write(engine->outputStreams.video.outputFile, &size, sizeof(size));
 	write(engine->outputStreams.video.outputFile, huffBuffer, size);
@@ -215,8 +231,6 @@ static void *yEngineThreadCallback(void *data)
 {
 	yEngine *engine = data;
 	
-	static uint32_t scaledFrame[1280*1024*4];
-	
 	printf("yEngine thread started\n");
 
 	int srcWidth = engine->staticInfo.video.drawableSize.width;
@@ -225,7 +239,9 @@ static void *yEngineThreadCallback(void *data)
 	int destWidth = engine->staticInfo.video.downScale ? srcWidth / 2 : srcWidth;
 	int destHeight = engine->staticInfo.video.downScale ? srcHeight / 2 : srcHeight;
 	
-	printf("yEngine: size: %d:%d\n", srcWidth, srcHeight);
+	printf("yEngine: size: %d:%d => %d:%d\n", srcWidth, srcHeight, destWidth, destHeight);
+	
+	uint32_t *scaledFrame = malloc(destWidth * destHeight * 4);
 	
 	uint8_t *yuvPlanes[3];
 	yuvPlanes[0] = malloc(destWidth * destHeight);
@@ -257,9 +273,9 @@ static void *yEngineThreadCallback(void *data)
 		resampleFrameFast((uint32_t *)scaledFrame, yuvPlanes, destWidth, destHeight);
 		
 		write(engine->outputStreams.video.outputFile, &tStamp, sizeof(tStamp));
-		writePlane(engine, yuvPlanes[0], destWidth * destHeight);
-		writePlane(engine, yuvPlanes[1], destWidth * destHeight / 4);
-		writePlane(engine, yuvPlanes[2], destWidth * destHeight / 4);
+		writePlane(engine, yuvPlanes[0], destWidth, destHeight);
+		writePlane(engine, yuvPlanes[1], destWidth / 2, destHeight / 2);
+		writePlane(engine, yuvPlanes[2], destWidth / 2, destHeight / 2);
 		
 		yTimeGet(&timeStop);
 		yTimeSub(&timeStop, &timeStart, &timeElapsed);

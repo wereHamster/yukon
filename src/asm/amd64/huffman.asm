@@ -80,18 +80,17 @@ huffDecompress:
     bswap   r15
     bswap   r14
     shld    r15,r14,cl            ; left-shift to have the beginning on the very left position
-    mov     r8,r15                ; working copy of r15
-    shr     r8,32
-    or      r8,1
-    shl     r8,32
-    bsr     rbx,r8                ; store MSB in rbx
-    btr     r8,rbx                ; clear MSB from r8
+    shr     r15,32
+    or      r15,1
+    shl     r15,32
+    bsr     rbx,r15                ; store MSB in rbx
+    btr     r15,rbx                ; clear MSB from r15
     sub     rbx,32
     mov     rbx,[r12+rbx*8]       ; load pointer to the decoder table
     mov     cl,[rbx]              ; first byte is residual symbol length
     add     cl,32
-    shr     r8,cl                 ; right-shift to extract the symbol
-    movzx   rcx,byte [rbx+r8+1]   ; load decoded byte
+    shr     r15,cl                 ; right-shift to extract the symbol
+    movzx   rcx,byte [rbx+r15+1]   ; load decoded byte
     movzx   rbx,byte [r11+rcx]    ; load symbol length
     add     rax,rbx               ; add symbol length to rax
     

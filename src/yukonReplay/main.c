@@ -19,7 +19,7 @@ extern void yv12_to_rgba_c (
 );
 
 static uint8_t *yuvPlanes[3];
-static uint64_t yuvPlanesSizes[3];
+static struct { uint64_t x; uint64_t y; } yuvPlanesSizes[3];
 static uint8_t *rgbFrame;
 
 static Display *dpy = NULL;
@@ -72,16 +72,54 @@ static void glCaptureCreateWindow(int width, int height)
 
 extern void colorspace_init(void);
 
+static uint8_t median(uint8_t v1, uint8_t v2, uint8_t v3)
+{
+	return ( v1 + v2 + v3 ) / 3;
+}
+
 int main(int argc, char *argv[]) {
 	int inFile = open(argv[1], O_RDONLY);
 	if (inFile == -1) {
 		perror("can't open infile");
 		exit(-1);
 	}
-
+	
 	colorspace_init();
 
 	yCompressorInit();
+	
+/*	static uint8_t b1[1280 * 1024 * 3 / 2];
+	static uint32_t b2[1280 * 1024 * 3 / 2];
+	
+	srand(time(NULL));
+	for (int i = 0; i < sizeof(b1); ++i) {
+		b1[i] = rand();
+	}
+	
+	for (int i = 1; i < sizeof(b1); ++i) {
+		b1[i] = b1[i] - b1[i-1];
+	}
+	
+	struct timeval bmt[3];
+	gettimeofday(&bmt[0], 0);
+	
+	for (int i = 1; i < 256; ++i) {
+		uint32_t *end = huffCompress(b2, b1, b1 + sizeof(b1), huffEncodeTable);
+	}
+	
+	gettimeofday(&bmt[1], 0);
+	timersub(&bmt[1], &bmt[0], &bmt[2]);
+	printf("compress: %.3f\n", (float) (bmt[2].tv_sec * 1000000 + bmt[2].tv_usec) / 1000000);
+	
+	gettimeofday(&bmt[0], 0);
+	for (int i = 1; i < 256; ++i) {
+		uint8_t *end = huffDecompress(b1, b2, b1 + sizeof(b1), &huffDecodeTable);
+	}
+	
+	gettimeofday(&bmt[1], 0);
+	timersub(&bmt[1], &bmt[0], &bmt[2]);
+	printf("decompress: %.3f\n", (float) (bmt[2].tv_sec * 1000000 + bmt[2].tv_usec) / 1000000);
+	*/
 
 	struct stat statBuffer;
 	fstat(inFile, &statBuffer);
@@ -131,14 +169,19 @@ int main(int argc, char *argv[]) {
 	uint64_t rawFrames = (statBuffer.st_size - 2 * sizeof(uint64_t)) / (width * height * 3 / 2 + sizeof(uint64_t));
 	printf("ratio: %.3f\n", (float)rawFrames / cFrameTotal);
 	
-	yuvPlanesSizes[0] = width * height;
-	yuvPlanesSizes[1] = width * height / 4;
-	yuvPlanesSizes[2] = width * height / 4;
+	yuvPlanesSizes[0].x = width;
+	yuvPlanesSizes[0].y = height;
+	
+	yuvPlanesSizes[1].x = width / 2;
+	yuvPlanesSizes[1].y = height / 2;
+	
+	yuvPlanesSizes[2].x = width / 2;
+	yuvPlanesSizes[2].y = height / 2;
 	
 	rgbFrame = malloc(width * height * 4);
 	yuvPlanes[0] = malloc(width * height * 3 / 2);
-	yuvPlanes[1] = yuvPlanes[0] + yuvPlanesSizes[0];
-	yuvPlanes[2] = yuvPlanes[1] + yuvPlanesSizes[1];
+	yuvPlanes[1] = yuvPlanes[0] + yuvPlanesSizes[0].x * yuvPlanesSizes[0].y;
+	yuvPlanes[2] = yuvPlanes[1] + yuvPlanesSizes[1].x * yuvPlanesSizes[1].y;
 
 	struct timeval currentTime = { 0 };
 	gettimeofday(&currentTime, 0);
@@ -177,10 +220,23 @@ int main(int argc, char *argv[]) {
 		for (int i = 0; i < 3; ++i) {
 			uint64_t cSize = *(uint64_t *) currentPosition;
 			currentPosition += sizeof(uint64_t);
-			huffDecompress(yuvPlanes[i], (uint32_t *)currentPosition, yuvPlanes[i] + yuvPlanesSizes[i], &huffDecodeTable);
-			for (int j = 1; j < yuvPlanesSizes[i]; ++j) {
-				yuvPlanes[i][j] = yuvPlanes[i][j] + yuvPlanes[i][j - 1];
+			huffDecompress(yuvPlanes[i], (uint32_t *)currentPosition, yuvPlanes[i] + yuvPlanesSizes[i].x * yuvPlanesSizes[i].y, &huffDecodeTable);
+			
+			uint64_t width = yuvPlanesSizes[i].x;
+			uint64_t height = yuvPlanesSizes[i].y;
+			
+#define src(x,y) ( yuvPlanes[i][(y)*width+(x)] )
+			for (int x = 1; x < width; ++x) {
+				yuvPlanes[i][x] = yuvPlanes[i][x] + median(src(x-1,0), 0, src(x-1,0));
 			}
+			
+			for (int y = 1; y < height; ++y) {
+				yuvPlanes[i][y * width] = yuvPlanes[i][y * width] + median(0, src(0,y-1), src(0,y-1));
+				for (int x = 1; x < width; ++x) {
+					yuvPlanes[i][y * width + x] = yuvPlanes[i][y * width + x] + median(src(x-1,y), src(x,y-1), src(x-1,y)+src(x,y-1)-src(x-1,y-1));
+				}
+			}
+#undef src
 			currentPosition += cSize;
 		}
 
@@ -189,8 +245,9 @@ int main(int argc, char *argv[]) {
 
 		gettimeofday(&currentTime, 0);
 		uint64_t now = currentTime.tv_sec * 1000000 + currentTime.tv_usec;
-		if (now < pts + tdiff) {
-			usleep((uint64_t) pts + tdiff - now);
+		int64_t s = pts + tdiff - now;
+		if (s > 0) {
+			usleep((uint64_t) s);
 		} else {
 			tdiff = currentTime.tv_sec * 1000000 + currentTime.tv_usec - pts;
 		}

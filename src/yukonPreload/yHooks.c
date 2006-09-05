@@ -62,11 +62,11 @@ static void yHooksConstructor()
 
 #undef loadHook
 
-    printf("yukon hooks established !\n");
+    //printf("yukon hooks established !\n");
 
     yukonOverride = getenv("yukonOverride");
     if (yukonOverride) {
-        printf("yukonOverride enabled, magic key combination will start capturing on all windows !\n");
+        //printf("yukonOverride enabled, magic key combination will start capturing on all windows !\n");
     }
     
     yCompressorInit();
@@ -75,7 +75,7 @@ static void yHooksConstructor()
 __attribute__ ((destructor))
 static void yHooksDestructor()
 {
-	printf("yukon hooks cleaned up !\n");
+	//printf("yukon hooks cleaned up !\n");
 }
 
 void glXSwapBuffers(Display * dpy, GLXDrawable drawable)

@@ -322,6 +322,21 @@ int main(int argc, char *argv[]) {
 				break;
 			case ConfigureNotify:
 				glViewport(0, 0, e.xconfigure.width, e.xconfigure.height);
+				glClear(GL_COLOR_BUFFER_BIT);
+				
+				int w = e.xconfigure.width;
+				int h = e.xconfigure.height;
+				
+				if ((float)width / height < (float)w / h) {
+					w = h * width / height;
+				} else {
+					h = w * height / width;
+				}
+				
+				int x = ( e.xconfigure.width - w ) / 2;
+				int y = ( e.xconfigure.height - h ) / 2;
+				
+				glViewport(x, y, w, h);
 				break;
 			default:
 				break;

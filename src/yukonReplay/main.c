@@ -1,4 +1,4 @@
-
+ 
 #define _FILE_OFFSET_BITS 64
 #define _LARGEFILE_SOURCE
 
@@ -47,7 +47,7 @@ static void glCaptureCreateWindow(int width, int height)
 	XEvent event;
 	int nElements;
 
-	int attr[] = { GLX_DOUBLEBUFFER, False, None };
+	int attr[] = { GLX_DOUBLEBUFFER, True, None };
 
 	fbc = glXChooseFBConfig(dpy, DefaultScreen(dpy), attr, &nElements);
 	vi = glXGetVisualFromFBConfig(dpy, fbc[0]);
@@ -75,6 +75,72 @@ extern void colorspace_init(void);
 static uint8_t median(uint8_t v1, uint8_t v2, uint8_t v3)
 {
 	return ( v1 + v2 + v3 ) / 3;
+}
+
+static struct timeval barTimer;
+
+static void DrawBarBorder(float xf)
+{
+	static const float t = 0.02;
+	static const float x = 0.95;
+	static const float w = 0.03;
+	static const float h = 0.05;
+	
+	glBegin(GL_TRIANGLE_FAN);
+		glVertex2f(xf * ( x - t ), h);
+		glVertex2f(xf * ( x - t - w ), h);
+		glVertex2f(xf * ( x - t - w ), h + t);
+		glVertex2f(xf * ( x ), h + t);
+		glVertex2f(xf * ( x ), -h - t);
+		glVertex2f(xf * ( x - t ), -h);
+	glEnd();
+	
+	glBegin(GL_TRIANGLE_FAN);
+		glVertex2f(xf * ( x - t ), -h );
+		glVertex2f(xf * ( x ), -h - t);
+		glVertex2f(xf * ( x - t - w ), -h - t);
+		glVertex2f(xf * ( x - t - w ), -h);
+	glEnd();
+}
+
+static int barSticky;
+
+static void DrawBar(float val)
+{
+	glDisable(GL_TEXTURE_2D);
+	
+	struct timeval currentTime = { 0 };
+	gettimeofday(&currentTime, 0);
+	
+	struct timeval elapsed = { 0 };
+	timersub(&currentTime, &barTimer, &elapsed);
+	
+	float e = elapsed.tv_sec * 1000000 + elapsed.tv_usec;
+	
+	static const float fade = 5 * 1000000;
+	
+	float alpha = fade - e;
+	if (barSticky) {
+		alpha = 2000000;
+	}
+	if (alpha > 0.0) {
+		glColor4f(1.0, 1.0, 1.0, alpha / fade);
+		
+		DrawBarBorder(-1.0);
+		DrawBarBorder( 1.0);
+	
+		glBegin(GL_QUADS);
+			float x = ( 0.92 + 0.92 ) * val;
+			glVertex2f(-0.92, -0.04);
+			glVertex2f(-0.92 + x, -0.04);
+			glVertex2f(-0.92 + x, 0.04);
+			glVertex2f(-0.92, 0.04);
+		glEnd();
+	
+		glColor4f(1.0, 1.0, 1.0, 1.0);
+	}
+	
+	glEnable(GL_TEXTURE_2D);
 }
 
 int main(int argc, char *argv[]) {
@@ -203,6 +269,9 @@ int main(int argc, char *argv[]) {
 
 	uint64_t fIndex = 0;
 	
+	glEnable(GL_BLEND);
+	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+	
 	int pause = 0;
 	
 	for (;;) {
@@ -262,7 +331,10 @@ int main(int argc, char *argv[]) {
 		glTexCoord2d(0.0, 1.0);
 		glVertex2d(-1.0, 1.0);
 		glEnd();
-		glFlush();
+		
+		DrawBar((float)fIndex / cFrameTotal);
+		
+		glXSwapBuffers(dpy, win);
 
 		if (pause) {
 			currentPosition = lastFrame;
@@ -281,6 +353,8 @@ int main(int argc, char *argv[]) {
 
 			switch (e.type) {
 			case KeyPress:
+				gettimeofday(&barTimer, 0);
+				
 				key = XLookupKeysym((XKeyEvent *) & e, 0);
 				switch (key) {
 				case XK_Right:
@@ -299,6 +373,9 @@ int main(int argc, char *argv[]) {
 					XResizeWindow(dpy, win, width, height);
 					//XIfEvent(dpy, &e, WaitFor__ConfigureNotify, (char *)win);
 					glViewport(0, 0, width, height);
+					break;
+				case XK_b:
+					barSticky = !barSticky;
 					break;
 				case XK_f:
 					memset(&event, 0, sizeof(XClientMessageEvent));

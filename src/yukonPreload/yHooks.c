@@ -88,35 +88,29 @@ void glXSwapBuffers(Display * dpy, GLXDrawable drawable)
 int XNextEvent(Display * dpy, XEvent * event)
 {
     int retVal = orig_XNextEvent(dpy, event);
-    while (yEngineEvent(dpy, event)) {
-        retVal = orig_XNextEvent(dpy, event);
-    }
+    yEngineEvent(dpy, event);
     return retVal;
 }
 
 int XPeekEvent(Display * dpy, XEvent * event)
 {
     int retVal = orig_XPeekEvent(dpy, event);
-    while (yEngineEvent(dpy, event)) {
-        retVal = orig_XPeekEvent(dpy, event);
-    }
+    yEngineEvent(dpy, event);
     return retVal;
 }
 
 int XWindowEvent(Display * dpy, Window w, long mask, XEvent * event)
 {
     int retVal = orig_XWindowEvent(dpy, w, mask, event);
-    while (yEngineEvent(dpy, event)) {
-        retVal = orig_XWindowEvent(dpy, w, mask, event);
-    }
+    yEngineEvent(dpy, event);
     return retVal;
 }
 
 Bool XCheckWindowEvent(Display * dpy, Window w, long mask, XEvent * event)
 {
     Bool retVal = orig_XCheckWindowEvent(dpy, w, mask, event);
-    while (retVal && yEngineEvent(dpy, event)) {
-        retVal = orig_XCheckWindowEvent(dpy, w, mask, event);
+    if (retVal) {
+    	yEngineEvent(dpy, event);
     }
     return retVal;
 }
@@ -124,17 +118,15 @@ Bool XCheckWindowEvent(Display * dpy, Window w, long mask, XEvent * event)
 int XMaskEvent(Display * dpy, long mask, XEvent * event)
 {
     int retVal = orig_XMaskEvent(dpy, mask, event);
-    while (yEngineEvent(dpy, event)) {
-        retVal = orig_XMaskEvent(dpy, mask, event);
-    }
+    yEngineEvent(dpy, event);
     return retVal;
 }
 
 Bool XCheckMaskEvent(Display * dpy, long mask, XEvent * event)
 {
     Bool retVal = orig_XCheckMaskEvent(dpy, mask, event);
-    while (retVal && yEngineEvent(dpy, event)) {
-        retVal = orig_XCheckMaskEvent(dpy, mask, event);
+    if (retVal) {
+    	yEngineEvent(dpy, event);
     }
     return retVal;
 }
@@ -142,8 +134,8 @@ Bool XCheckMaskEvent(Display * dpy, long mask, XEvent * event)
 Bool XCheckTypedEvent(Display * dpy, int type, XEvent * event)
 {
     Bool retVal = orig_XCheckTypedEvent(dpy, type, event);
-    while (retVal && yEngineEvent(dpy, event)) {
-        retVal = orig_XCheckTypedEvent(dpy, type, event);
+    if (retVal) {
+    	yEngineEvent(dpy, event);
     }
     return retVal;
 }
@@ -151,8 +143,8 @@ Bool XCheckTypedEvent(Display * dpy, int type, XEvent * event)
 Bool XCheckTypedWindowEvent(Display * dpy, Window w, int type, XEvent * event)
 {
     Bool retVal = orig_XCheckTypedWindowEvent(dpy, w, type, event);
-    while (retVal && yEngineEvent(dpy, event)) {
-        retVal = orig_XCheckTypedWindowEvent(dpy, w, type, event);
+    if (retVal) {
+    	yEngineEvent(dpy, event);
     }
     return retVal;
 }
@@ -161,17 +153,15 @@ Bool XCheckTypedWindowEvent(Display * dpy, Window w, int type, XEvent * event)
 int XIfEvent(Display * dpy, XEvent * event, Bool(*predicate) (), XPointer arg)
 {
     int retVal = orig_XIfEvent(dpy, event, predicate, arg);
-    while (yEngineEvent(dpy, event)) {
-        retVal = orig_XIfEvent(dpy, event, predicate, arg);
-    }
+    yEngineEvent(dpy, event);
     return retVal;
 }
 
 Bool XCheckIfEvent(Display * dpy, XEvent * event, Bool(*predicate) (), XPointer arg)
 {
     Bool retVal = orig_XCheckIfEvent(dpy, event, predicate, arg);
-    while (retVal && yEngineEvent(dpy, event)) {
-        retVal = orig_XCheckIfEvent(dpy, event, predicate, arg);
+    if (retVal) {
+    	yEngineEvent(dpy, event);
     }
     return retVal;
 }
@@ -179,9 +169,7 @@ Bool XCheckIfEvent(Display * dpy, XEvent * event, Bool(*predicate) (), XPointer 
 int XPeekIfEvent(Display * dpy, XEvent * event, Bool(*predicate) (), XPointer arg)
 {
     int retVal = orig_XPeekIfEvent(dpy, event, predicate, arg);
-    while (yEngineEvent(dpy, event)) {
-        retVal = orig_XPeekIfEvent(dpy, event, predicate, arg);
-    }
+    yEngineEvent(dpy, event);
     return retVal;
 }
 

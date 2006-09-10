@@ -99,3 +99,19 @@ void yConfigInsets(uint64_t v[4])
 		free(optionValue);
 	}
 }
+
+char *yConfigHotkey(void)
+{
+	char *optionValue = 0;
+	char *ret = 0;
+	
+	optionValue = yConfigOption("hotkey");
+	if (optionValue) {
+		optionValue[strlen(optionValue) - 1] = 0;
+		ret = optionValue;
+	} else {
+		ret = strdup("F8");
+	}
+	
+	return ret;
+}

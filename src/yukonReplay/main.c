@@ -154,8 +154,9 @@ int main(int argc, char *argv[]) {
 
 	yCompressorInit();
 	
-/*	static uint8_t b1[1280 * 1024 * 3 / 2];
-	static uint32_t b2[1280 * 1024 * 3 / 2];
+/*
+	static uint8_t b1[1024 * 1024];
+	static uint32_t b2[1024 * 1024];
 	
 	srand(time(NULL));
 	for (int i = 0; i < sizeof(b1); ++i) {
@@ -185,7 +186,7 @@ int main(int argc, char *argv[]) {
 	gettimeofday(&bmt[1], 0);
 	timersub(&bmt[1], &bmt[0], &bmt[2]);
 	printf("decompress: %.3f\n", (float) (bmt[2].tv_sec * 1000000 + bmt[2].tv_usec) / 1000000);
-	*/
+*/
 
 	struct stat statBuffer;
 	fstat(inFile, &statBuffer);
@@ -274,6 +275,10 @@ int main(int argc, char *argv[]) {
 	
 	int pause = 0;
 	
+	gettimeofday(&barTimer, 0);
+	
+	barTimer.tv_sec -= 10;
+	
 	for (;;) {
 		//currentPosition = sourceData + 16;
 		if (currentPosition >= sourceData + statBuffer.st_size) {
@@ -321,6 +326,8 @@ int main(int argc, char *argv[]) {
 			tdiff = currentTime.tv_sec * 1000000 + currentTime.tv_usec - pts;
 		}
 
+		glClear(GL_COLOR_BUFFER_BIT);
+		
 		glBegin(GL_QUADS);
 		glTexCoord2d(0.0, 0.0);
 		glVertex2d(-1.0, -1.0);
@@ -353,8 +360,6 @@ int main(int argc, char *argv[]) {
 
 			switch (e.type) {
 			case KeyPress:
-				gettimeofday(&barTimer, 0);
-				
 				key = XLookupKeysym((XKeyEvent *) & e, 0);
 				switch (key) {
 				case XK_Right:
@@ -424,7 +429,7 @@ int main(int argc, char *argv[]) {
 			fIndex = 0;
 			skipFrames = 0;
 			currentPosition = sourceData + 2 * sizeof(uint64_t);
-		} else if (fIndex + skipFrames > cFrameTotal - 50) {
+		} else if (skipFrames > 0 && fIndex + skipFrames > cFrameTotal - 50) {
 			skipFrames = 0;
 		} 
 
@@ -446,6 +451,8 @@ int main(int argc, char *argv[]) {
 			pts = *(uint64_t *) currentPosition;
 			gettimeofday(&currentTime, 0);
 			tdiff = currentTime.tv_sec * 1000000 + currentTime.tv_usec - pts;
+			
+			gettimeofday(&barTimer, 0);
 		}
 	}
 	

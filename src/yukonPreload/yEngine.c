@@ -479,11 +479,9 @@ void yEngineEvent(Display *dpy, XEvent *event)
 
 	switch(event->type) {
 	case KeyPress:
-		if (event->xkey.keycode == keycode) {
-			yEngine *engine = yEngineLocate(dpy, event->xkey.window);
-			
+		if (event->xkey.keycode == keycode) {			
 			if (yukonOverride) {
-				if (engine) {
+				if (engineRegistry[0]) {
 					printf("doCapture: end by override\n");
 					
 					capturingEnabled = 0;
@@ -497,6 +495,7 @@ void yEngineEvent(Display *dpy, XEvent *event)
 					capturingEnabled = yukonOverride;
 				}
 			} else {
+				yEngine *engine = yEngineLocate(dpy, event->xkey.window);
 				if (engine) {
 					printf("doCapture: end\n");
 					yEngineStop(dpy, event->xkey.window);

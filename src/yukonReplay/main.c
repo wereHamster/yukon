@@ -280,13 +280,6 @@ int main(int argc, char *argv[]) {
 	barTimer.tv_sec -= 10;
 	
 	for (;;) {
-		//currentPosition = sourceData + 16;
-		if (currentPosition >= sourceData + statBuffer.st_size) {
-			printf("\nending\n");
-
-			break;
-		}
-
 		unsigned char *lastFrame = currentPosition;
 		pts = *(uint64_t *) currentPosition;
 		currentPosition += sizeof(uint64_t);
@@ -339,19 +332,13 @@ int main(int argc, char *argv[]) {
 		glVertex2d(-1.0, 1.0);
 		glEnd();
 		
-		DrawBar((float)fIndex / cFrameTotal);
+		DrawBar((float)fIndex / (cFrameTotal - 1));
 		
 		glXSwapBuffers(dpy, win);
 
-		if (pause) {
-			currentPosition = lastFrame;
-		} else {
-			++fIndex;
-		}
-
 		fprintf(stderr, "encoded frames: %llu/%llu \r", fIndex, cFrameTotal);
 
-		int skipFrames = 0;
+		int skipFrames = pause ? 0 : 1;
 		while (XPending(dpy)) {
 			XEvent e;
 			XClientMessageEvent event;
@@ -395,7 +382,7 @@ int main(int argc, char *argv[]) {
 					XSendEvent(dpy, DefaultRootWindow(dpy), False, SubstructureRedirectMask, (XEvent *) & event);
 					break;
 				case XK_Escape:
-					currentPosition = sourceData + statBuffer.st_size;
+					exit(0);
 					break;
 				case XK_space:
 					pause = !pause;
@@ -427,14 +414,13 @@ int main(int argc, char *argv[]) {
 		
 		if (skipFrames < 0 && -skipFrames > fIndex) {
 			fIndex = 0;
-			skipFrames = 0;
-			currentPosition = sourceData + 2 * sizeof(uint64_t);
-		} else if (skipFrames > 0 && fIndex + skipFrames > cFrameTotal - 50) {
-			skipFrames = 0;
-		} 
-
-		if (skipFrames) {
+		} else if (skipFrames > 0 && fIndex + skipFrames >= cFrameTotal) {
+			fIndex = cFrameTotal - 1;
+		} else {
 			fIndex += skipFrames;
+		}
+		
+		if (1) {
 			currentPosition = sourceData + 2 * sizeof(uint64_t);
 			for (int i = 0; i < fIndex; ++i) {
 				pts = *(uint64_t *) currentPosition;
@@ -452,7 +438,9 @@ int main(int argc, char *argv[]) {
 			gettimeofday(&currentTime, 0);
 			tdiff = currentTime.tv_sec * 1000000 + currentTime.tv_usec - pts;
 			
-			gettimeofday(&barTimer, 0);
+			if (skipFrames > 1 || skipFrames < 0) {
+				gettimeofday(&barTimer, 0);
+			}
 		}
 	}
 	

@@ -54,15 +54,18 @@ yukonReplaySource	= [
 
 for arch, env in envArray.items():
 	env.BuildDir('build/'+arch+'/', 'src')
+	
 	mmEnv = env.Copy()
 	mmEnv.Append(LIBS = ['X11', 'GL'])
-	env.Append(LIBS = ['FG', 'X13'])
-	env.Append(LIBPATH = os.getenv('LIBPATH'))
+	
+	libEnv = env.Copy()
+	libEnv.Append(LIBS = ['FG', 'X13'])
+	libEnv.Append(LIBPATH = os.getenv('LIBPATH'))
 	
 	asm = [ 'build/'+arch+'/asm/'+arch+'/huffman.asm' ]
-	lib = env.SharedLibrary(target = 'build/'+arch+'/yPreload.'+arch+'.so', source = [ 'build/'+arch+'/'+s for s in yukonPreloadSource ] + asm, SHLIBPREFIX='')
+	lib = libEnv.SharedLibrary(target = 'build/'+arch+'/yPreload.'+arch+'.so', source = [ 'build/'+arch+'/'+s for s in yukonPreloadSource ] + asm, SHLIBPREFIX='')
 	replay = mmEnv.Program(target = 'build/'+arch+'/yReplay', source = [ 'build/'+arch+'/'+s for s in yukonReplaySource ] + asm)
-	server = Program(target = 'build/'+arch+'/yServer', source = 'build/'+arch+'/yukonServer/main.c')
-	env.Alias(arch, [ lib, replay, server ])
+	server = env.Program(target = 'build/'+arch+'/yServer', source = 'build/'+arch+'/yukonServer/main.c')
+	Alias(arch, [ lib, replay, server ])
 
 Default()

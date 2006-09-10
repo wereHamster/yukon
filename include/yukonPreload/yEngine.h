@@ -7,7 +7,7 @@
 typedef struct _yEngine yEngine;
 typedef struct _yEngineBuffer yEngineBuffer;
 
-int yEngineEvent(Display *dpy, XEvent *event);
+void yEngineEvent(Display *dpy, XEvent *event);
 
 void yEngineCapture(Display *dpy, GLXDrawable drawable);
 

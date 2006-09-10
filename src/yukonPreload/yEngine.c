@@ -467,80 +467,49 @@ static void yEngineStop(Display *dpy, GLXDrawable drawable)
 }
 
 
-int yEngineEvent(Display *dpy, XEvent *event)
+void yEngineEvent(Display *dpy, XEvent *event)
 {
-#define checkKeyCode(dpy, event, keyCode)	\
-	( event->xkey.keycode == XKeysymToKeycode(dpy, keyCode) )
-
-	static int keyModMap[3] = { 0, 0, 0 };
+	char *hotkey = yConfigHotkey();
+	KeyCode keycode = XKeysymToKeycode(dpy, XStringToKeysym(hotkey));
+	free(hotkey);
+	
+	if (keycode == 0) {
+		return;
+	}
 
 	switch(event->type) {
 	case KeyPress:
-		if (checkKeyCode(dpy, event, XK_Control_L) || checkKeyCode(dpy, event, XK_Control_R)) {
-			keyModMap[0] = 1;
-  		}
-		if (checkKeyCode(dpy, event, XK_Alt_L) || checkKeyCode(dpy, event, XK_Alt_R)) {
-			keyModMap[1] = 1;
-  		}
-		if (checkKeyCode(dpy, event, XK_Shift_L) || checkKeyCode(dpy, event, XK_Shift_R)) {
-			keyModMap[2] = 1;
-  		}
-
-		if (checkKeyCode(dpy, event, XK_F1)) {
+		if (event->xkey.keycode == keycode) {
+			yEngine *engine = yEngineLocate(dpy, event->xkey.window);
+			
 			if (yukonOverride) {
-				printf("doCapture: start by override\n");
-				capturingEnabled = yukonOverride;
-				return 1;
-			} else if (keyModMap[0] && keyModMap[2]) {
-				printf("doCapture: start\n");
-				yEngineStart(dpy, event->xkey.window);
-				return 1;
-			}
-  		}
-		if (checkKeyCode(dpy, event, XK_F2)) {
-			if (yukonOverride) {
-				printf("doCapture: end by override\n");
-				capturingEnabled = 0;
-				for (int registryIndex = 0; registryIndex < 64; ++registryIndex) {
-					if (engineRegistry[registryIndex]) {
-						yEngineStop(engineRegistry[registryIndex]->dpy, engineRegistry[registryIndex]->drawable);
+				if (engine) {
+					printf("doCapture: end by override\n");
+					
+					capturingEnabled = 0;
+					for (int registryIndex = 0; registryIndex < 64; ++registryIndex) {
+						if (engineRegistry[registryIndex]) {
+							yEngineStop(engineRegistry[registryIndex]->dpy, engineRegistry[registryIndex]->drawable);
+						}
 					}
+				} else {
+					printf("doCapture: start by override\n");
+					capturingEnabled = yukonOverride;
 				}
-				return 1;
-			} else if (keyModMap[0] && keyModMap[2]) {
-				printf("doCapture: end\n");
-				yEngineStop(dpy, event->xkey.window);
-				return 1;
-			}
-  		}
-		break;
-	case KeyRelease:
-		if (checkKeyCode(dpy, event, XK_Control_L) || checkKeyCode(dpy, event, XK_Control_R)) {
-			keyModMap[0] = 0;
-  		}
-		if (checkKeyCode(dpy, event, XK_Alt_L) || checkKeyCode(dpy, event, XK_Alt_R)) {
-			keyModMap[1] = 0;
-  		}
-		if (checkKeyCode(dpy, event, XK_Shift_L) || checkKeyCode(dpy, event, XK_Shift_R)) {
-			keyModMap[2] = 0;
-  		}
-		if (checkKeyCode(dpy, event, XK_F1)) {
-			if (keyModMap[0] && keyModMap[2]) {
-				return 1;
-			}
-  		}
-		if (checkKeyCode(dpy, event, XK_F2)) {
-			if (keyModMap[0] && keyModMap[2]) {
-				return 1;
+			} else {
+				if (engine) {
+					printf("doCapture: end\n");
+					yEngineStop(dpy, event->xkey.window);
+				} else {
+					printf("doCapture: start\n");
+					yEngineStart(dpy, event->xkey.window);
+				}
 			}
   		}
 		break;
 	default:
 		break;
 	}
-#undef checkKeyCode
-
-	return 0;
 }
 
 void yEngineCapture(Display *dpy, GLXDrawable drawable)

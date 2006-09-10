@@ -214,27 +214,35 @@ int main(int argc, char *argv[]) {
 			uint64_t cSize = *(uint64_t *) mem;
 			mem += sizeof(uint64_t) + cSize;
 		}
+		
+		if (mem >= sourceData + statBuffer.st_size) {
+			break;
+		}
+		
 		++cFrameTotal;
 
 		uint64_t c = (mem - sourceData) * 1000.0 / statBuffer.st_size;
 		fprintf(stderr, "analysing video... %04.1f%% \r", (float)c / 10.0);
-
-		if (mem >= sourceData + statBuffer.st_size) {
-			break;
-		}
 	}
 
 	fprintf(stderr, "analysing video... done  \n");
+	
+	if (cFrameTotal == 0) {
+		printf("empty video\n");
+		exit(0);
+	}
+	
 	uint64_t tt = (time[1] - time[0]) / 1000000;
 	float fps = (float)cFrameTotal / tt;
 	float mbs = (float)statBuffer.st_size / 1024 / 1024 / tt;
-	fprintf(stderr, "%llu frames, %llu seconds, %.1f fps, %.1f MiB/s\n", cFrameTotal, tt, fps, mbs);
+	printf("%llu frames, %llu seconds, %.1f fps, %.1f MiB/s\n", cFrameTotal, tt, fps, mbs);
 
 	uint64_t cTimeTotal = *(uint64_t *) (sourceData + statBuffer.st_size - (width * height * 3 / 2 + sizeof(uint64_t))) - *(uint64_t *) currentPosition;
 	printf("size: %llu:%llu, cFrameTotal: %llu, time: %llu\n", width, height, cFrameTotal, cTimeTotal / 1000000);
 
 	uint64_t rawFrames = (statBuffer.st_size - 2 * sizeof(uint64_t)) / (width * height * 3 / 2 + sizeof(uint64_t));
 	printf("ratio: %.3f\n", (float)rawFrames / cFrameTotal);
+
 	
 	yuvPlanesSizes[0].x = width;
 	yuvPlanesSizes[0].y = height;
@@ -415,7 +423,7 @@ int main(int argc, char *argv[]) {
 		if (skipFrames < 0 && -skipFrames > fIndex) {
 			fIndex = 0;
 		} else if (skipFrames > 0 && fIndex + skipFrames >= cFrameTotal) {
-			fIndex = cFrameTotal - 1;
+			fIndex = cFrameTotal;
 			pause = 1;
 		} else {
 			fIndex += skipFrames;

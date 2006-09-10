@@ -416,6 +416,7 @@ int main(int argc, char *argv[]) {
 			fIndex = 0;
 		} else if (skipFrames > 0 && fIndex + skipFrames >= cFrameTotal) {
 			fIndex = cFrameTotal - 1;
+			pause = 1;
 		} else {
 			fIndex += skipFrames;
 		}

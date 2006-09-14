@@ -340,7 +340,7 @@ int main(int argc, char *argv[]) {
 		glVertex2d(-1.0, 1.0);
 		glEnd();
 		
-		DrawBar((float)fIndex / (cFrameTotal - 1));
+		DrawBar((float)fIndex / (cFrameTotal));
 		
 		glXSwapBuffers(dpy, win);
 

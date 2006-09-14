@@ -318,15 +318,6 @@ int main(int argc, char *argv[]) {
 		yv12_to_rgba_c(rgbFrame, width * 4, yuvPlanes[0], yuvPlanes[1], yuvPlanes[2], width, width / 2, width, height, 0);
 		glTexImage2D(GL_TEXTURE_2D, 0, 4, width, height, 0, GL_BGRA, GL_UNSIGNED_BYTE, rgbFrame);
 
-		gettimeofday(&currentTime, 0);
-		uint64_t now = currentTime.tv_sec * 1000000 + currentTime.tv_usec;
-		int64_t s = pts + tdiff - now;
-		if (s > 0) {
-			usleep((uint64_t) s);
-		} else {
-			tdiff = currentTime.tv_sec * 1000000 + currentTime.tv_usec - pts;
-		}
-
 		glClear(GL_COLOR_BUFFER_BIT);
 		
 		glBegin(GL_QUADS);
@@ -341,6 +332,15 @@ int main(int argc, char *argv[]) {
 		glEnd();
 		
 		DrawBar((float)fIndex / (cFrameTotal));
+		
+		gettimeofday(&currentTime, 0);
+		uint64_t now = currentTime.tv_sec * 1000000 + currentTime.tv_usec;
+		int64_t s = pts - now + tdiff;
+		if (s > 0) {
+			usleep((uint64_t) s);
+		} else {
+			tdiff = now - pts;
+		}
 		
 		glXSwapBuffers(dpy, win);
 
@@ -444,11 +444,12 @@ int main(int argc, char *argv[]) {
 				}
 			}
 			pts = *(uint64_t *) currentPosition;
-			gettimeofday(&currentTime, 0);
-			tdiff = currentTime.tv_sec * 1000000 + currentTime.tv_usec - pts;
 			
 			if (skipFrames > 1 || skipFrames < 0) {
 				gettimeofday(&barTimer, 0);
+				
+				gettimeofday(&currentTime, 0);
+				tdiff = currentTime.tv_sec * 1000000 + currentTime.tv_usec - pts;
 			}
 		}
 	}

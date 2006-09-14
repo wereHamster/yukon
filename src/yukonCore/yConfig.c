@@ -1,117 +1,82 @@
 
 #include <yukonCore/yCore.h>
 
-static char *yConfigOption(const char *optionName)
+int yConfigOption(const char *name, char *buffer, int length)
 {
-	char *optionValue = 0;
-	char configName[4096];
+	char path[4096];
 
-	char *homeDirectory = getenv("HOME");
+	snprintf(path, 4096, "%s/.yukon/%s", getenv("HOME"), name);
 
-	snprintf(configName, 4096, "%s/.yukon/%s", homeDirectory, optionName);
-
-	int configFile = open(configName, O_RDONLY);
-	if (configFile >= 0) {
+	int fd = open(path, O_RDONLY);
+	if (fd >= 0) {
 		struct stat statBuffer;
-		fstat(configFile, &statBuffer);
+		fstat(fd, &statBuffer);
+		int size = statBuffer.st_size > length ? length : statBuffer.st_size;
+		read(fd, buffer, size);
+		buffer[size - 1] = 0;
 
-		if (statBuffer.st_size > 0) {
-			optionValue = malloc(statBuffer.st_size + 1);
-			if (optionValue) {
-				read(configFile, optionValue, statBuffer.st_size);
-				optionValue[statBuffer.st_size] = 0;
-			}
-		}
-
-		close(configFile);
-	}
-
-	return optionValue;
-}
-
-
-char *yConfigServer(void)
-{
-	char *optionValue = 0;
-	char *ret = 0;
-	
-	optionValue = yConfigOption("server");
-	if (optionValue) {
-		optionValue[strlen(optionValue) - 1] = 0;
-		ret = optionValue;
+		close(fd);
+		
+		return 0;
 	} else {
-		ret = strdup("127.0.0.1 63729");
+		return 1;
 	}
-	
-	return ret;
 }
 
-double yConfigInterval(void)
+void yConfigServer(char server[256])
 {
-	char *optionValue = 0;
-	double ret = 36000.0;
-	
-	optionValue = yConfigOption("interval");
-	if (optionValue) {
-		unsigned int interval = 0;
-		int success = sscanf(optionValue, "%u", &interval);
-		if (success) {
-			ret = (double) interval;
-		}
-		free(optionValue);
+	if (yConfigOption("server", server, 256)) {
+		strncpy(server, "127.0.0.1 9000", 256);
 	}
-	
-	return ret;
 }
 
-char *yConfigScale(void)
+void yConfigInterval(double *v)
 {
-	char *optionValue = 0;
-	char *ret = 0;
+	char interval[64];
 	
-	optionValue = yConfigOption("scale");
-	if (optionValue) {
-		optionValue[strlen(optionValue) - 1] = 0;
-		ret = optionValue;
-	} else {
-		ret = strdup("half");
+	*v = 36000.0;
+	
+	if (yConfigOption("interval", interval, 64)) {
+		return;
 	}
 	
-	return ret;
+	unsigned int ret = 0;
+	int success = sscanf(interval, "%u", &ret);
+	if (success) {
+		*v = (double) ret;
+	}
+}
+
+void yConfigScale(char scale[64])
+{
+	if (yConfigOption("scale", scale, 64)) {
+		strncpy(scale, "half", 64);
+	}
 }
 
 void yConfigInsets(uint64_t v[4])
 {
-	char *optionValue = 0;
+	char insets[64];
 	
 	v[0] = v[1] = v[2] = v[3] = 0;
 	
-	optionValue = yConfigOption("insets");
-	if (optionValue) {
-		unsigned int ins[4];
-		int success = sscanf(optionValue, "%u %u %u %u", &ins[0], &ins[1], &ins[2], &ins[3]);
-		if (success) {
-			v[0] = ins[0];
-			v[1] = ins[1];
-			v[2] = ins[2];
-			v[3] = ins[3];
-		}
-		free(optionValue);
+	if (yConfigOption("insets", insets, 64)) {
+		return;
+	}
+	
+	unsigned int ins[4];
+	int success = sscanf(insets, "%u %u %u %u", &ins[0], &ins[1], &ins[2], &ins[3]);
+	if (success) {
+		v[0] = ins[0];
+		v[1] = ins[1];
+		v[2] = ins[2];
+		v[3] = ins[3];
 	}
 }
 
-char *yConfigHotkey(void)
+void yConfigHotkey(char hotkey[64])
 {
-	char *optionValue = 0;
-	char *ret = 0;
-	
-	optionValue = yConfigOption("hotkey");
-	if (optionValue) {
-		optionValue[strlen(optionValue) - 1] = 0;
-		ret = optionValue;
-	} else {
-		ret = strdup("F8");
+	if (yConfigOption("hotkey", hotkey, 64)) {
+		strncpy(hotkey, "F8", 64);
 	}
-	
-	return ret;
 }

@@ -2,10 +2,10 @@
 #ifndef __YOKON_CORE_CONFIG_H__
 #define __YOKON_CORE_CONFIG_H__
 
-char *yConfigServer(void);
-double yConfigInterval(void);
-char *yConfigScale(void);
+void yConfigServer(char server[256]);
+void yConfigInterval(double *v);
+void yConfigScale(char scale[64]);
 void yConfigInsets(uint64_t v[4]);
-char *yConfigHotkey(void);
+void yConfigHotkey(char hotkey[64]);
 
 #endif /* __YOKON_CORE_CONFIG_H__ */

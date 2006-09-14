@@ -17,8 +17,6 @@ static type_XIfEvent orig_XIfEvent;
 static type_XCheckIfEvent orig_XCheckIfEvent;
 static type_XPeekIfEvent orig_XPeekIfEvent;
 
-extern char *yukonOverride;
-
 static void yHooksError(const char *hookName)
 {
     printf("====================================================\n");
@@ -63,11 +61,6 @@ static void yHooksConstructor()
 #undef loadHook
 
     //printf("yukon hooks established !\n");
-
-    yukonOverride = getenv("yukonOverride");
-    if (yukonOverride) {
-        //printf("yukonOverride enabled, magic key combination will start capturing on all windows !\n");
-    }
     
     yCompressorInit();
 }

@@ -3,7 +3,7 @@
 
 static yEngine *engineRegistry[64];
 
-char *capturingEnabled = 0;
+char capturingEnabled = 0;
 char *yukonOverride = 0;
 
 static void scaleFrameFast(uint32_t *inBuffer, uint32_t *outBuffer, int width, int height)
@@ -367,10 +367,10 @@ static void yEngineStart(Display *dpy, GLXDrawable drawable)
 	width = width - insets[1] - insets[3];
 	height = height - insets[0] - insets[2];
 	
-	char *scale = yConfigScale();
+	char scale[64];
+	yConfigScale(scale);
 	engine->staticInfo.video.downScale = strcmp(scale, "full");
 	printf("scale: %s\n", scale);
-	free(scale);
 	
 	if (engine->staticInfo.video.downScale) {
 		width &= ~(3);
@@ -383,17 +383,17 @@ static void yEngineStart(Display *dpy, GLXDrawable drawable)
 	engine->staticInfo.video.offset[0] = insets[3];
 	engine->staticInfo.video.offset[1] = insets[2];
 	
-	char *serverString = yConfigServer();
+	char server[256];
+	yConfigServer(server);
 	unsigned int serverPort;
 	char serverAddr[64];
-	int success = sscanf(serverString, "%s %u", serverAddr, &serverPort);
+	int success = sscanf(server, "%s %u", serverAddr, &serverPort);
 	if (success == 0) {
 		yEngineDestroy(engine);
 		return;
 	}
 	
 	printf("server address is: %s:%d\n", serverAddr, serverPort);
-	free(serverString);
 	
 	int fdSocket = socket(AF_INET, SOCK_STREAM, 0);
 	addr.sin_family = AF_INET;
@@ -418,7 +418,7 @@ static void yEngineStart(Display *dpy, GLXDrawable drawable)
 	engine->staticInfo.video.drawableSize.width = width;
 	engine->staticInfo.video.drawableSize.height = height;
 
-	engine->staticInfo.video.captureInterval = yConfigInterval();
+	yConfigInterval(&engine->staticInfo.video.captureInterval);
 	
 	engine->captureStatistics.video.captureInterval = engine->staticInfo.video.captureInterval;
 	engine->captureStatistics.video.engineInterval = engine->staticInfo.video.captureInterval;
@@ -467,42 +467,34 @@ static void yEngineStop(Display *dpy, GLXDrawable drawable)
 }
 
 
+static Time eventTime;
 void yEngineEvent(Display *dpy, XEvent *event)
 {
-	char *hotkey = yConfigHotkey();
+	static char hotkey[64];
+	
+	yConfigHotkey(hotkey);
 	KeyCode keycode = XKeysymToKeycode(dpy, XStringToKeysym(hotkey));
-	free(hotkey);
 	
 	if (keycode == 0) {
 		return;
 	}
-
+	
 	switch(event->type) {
 	case KeyPress:
-		if (event->xkey.keycode == keycode) {			
-			if (yukonOverride) {
-				if (engineRegistry[0]) {
-					printf("doCapture: end by override\n");
-					
-					capturingEnabled = 0;
-					for (int registryIndex = 0; registryIndex < 64; ++registryIndex) {
-						if (engineRegistry[registryIndex]) {
-							yEngineStop(engineRegistry[registryIndex]->dpy, engineRegistry[registryIndex]->drawable);
-						}
-					}
-				} else {
-					printf("doCapture: start by override\n");
-					capturingEnabled = yukonOverride;
-				}
+		if (event->xkey.keycode == keycode) {
+			if (event->xkey.time == eventTime) {
+				return;
+			}
+			
+			eventTime = event->xkey.time;
+			
+			if (engineRegistry[0]) {
+				printf("yEngineEvent: end\n");
+				capturingEnabled = 0;
+				yEngineStop(engineRegistry[0]->dpy, engineRegistry[0]->drawable);
 			} else {
-				yEngine *engine = yEngineLocate(dpy, event->xkey.window);
-				if (engine) {
-					printf("doCapture: end\n");
-					yEngineStop(dpy, event->xkey.window);
-				} else {
-					printf("doCapture: start\n");
-					yEngineStart(dpy, event->xkey.window);
-				}
+				printf("yEngineEvent: start\n");
+				capturingEnabled = 1;
 			}
   		}
 		break;
@@ -520,15 +512,22 @@ void yEngineCapture(Display *dpy, GLXDrawable drawable)
 	int unused;
 	int width;
 	int height;
+	
+	//printf("drawable: %lx\n", drawable);
 
 	yEngine *engine = yEngineLocate(dpy, drawable);
 	if (engine == 0) {
-		if (capturingEnabled == 0) {
+		if (engineRegistry[0]) {
+			/* only allow one engine to be running at any time */
 			return;
 		}
-
-		yEngineStart(dpy, drawable);
-		engine = yEngineLocate(dpy, drawable);
+		
+		if (capturingEnabled) {
+			yEngineStart(dpy, drawable);
+			engine = yEngineLocate(dpy, drawable);
+		} else {
+			return;
+		}
 	}
 
 	width = engine->staticInfo.video.drawableSize.width;

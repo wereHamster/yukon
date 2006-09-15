@@ -3,8 +3,7 @@
 
 static yEngine *engineRegistry[64];
 
-char capturingEnabled = 0;
-char *yukonOverride = 0;
+char doCapture = 0;
 
 static void scaleFrameFast(uint32_t *inBuffer, uint32_t *outBuffer, int width, int height)
 {
@@ -490,11 +489,11 @@ void yEngineEvent(Display *dpy, XEvent *event)
 			
 			if (engineRegistry[0]) {
 				printf("yEngineEvent: end\n");
-				capturingEnabled = 0;
+				doCapture = 0;
 				yEngineStop(engineRegistry[0]->dpy, engineRegistry[0]->drawable);
 			} else {
 				printf("yEngineEvent: start\n");
-				capturingEnabled = 1;
+				doCapture = 1;
 			}
   		}
 		break;
@@ -522,9 +521,13 @@ void yEngineCapture(Display *dpy, GLXDrawable drawable)
 			return;
 		}
 		
-		if (capturingEnabled) {
+		if (doCapture) {
 			yEngineStart(dpy, drawable);
 			engine = yEngineLocate(dpy, drawable);
+			if (engine == 0) {
+				doCapture = 0;
+				return;
+			}
 		} else {
 			return;
 		}

@@ -102,6 +102,6 @@ huffDecompress:
     
     end
     
-    mov     rax,r10
+    mov     rax,rdi
     
     retn

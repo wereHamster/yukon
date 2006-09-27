@@ -86,14 +86,35 @@ int main(int argc, char *argv[])
 		
 		printf("[%s] => %s:%d\n", date, inet_ntoa(addr.sin_addr), addr.sin_port);
 		
-		size_t size = 4096;
-		void *buffer[4096];
+		size_t bsize = 4096;
+		char buffer[4096];
 		
-		ssize_t ret = 0;
-		while (ret = read(fdInput, buffer, size)) {
-			if (ret > 0) {
-				write(fdOutput, buffer, ret);
+		for (;;) {
+			int rb = read(fdInput, buffer, bsize);
+			if (rb == 0) {
+				break;
+			} else if (rb < 0) {
+				if (errno == EINTR)
+					continue;
+				perror("read");
+				exit(0);
 			}
+
+			char *p = buffer;
+			do {
+				int wb = write(fdOutput, p, rb);
+				if (wb == 0) {
+					printf("filesystem full!\n");
+					exit(0);
+				} else if (wb == 0 < 0) {
+					if (errno == EINTR)
+						continue;
+					perror("write");
+					exit(0);
+				}
+				p += wb;
+				rb -= wb;
+			} while (rb);
 		}
 		
 		buildDate();

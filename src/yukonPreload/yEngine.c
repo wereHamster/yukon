@@ -287,7 +287,7 @@ static void *yEngineThreadCallback(void *data)
 			engine->captureStatistics.video.engineInterval = tElapsed;
 			engine->captureStatistics.video.captureInterval = tElapsed;
 		} else {
-			engine->captureStatistics.video.engineInterval = eInterval * 0.99 + tElapsed * 0.01;
+			engine->captureStatistics.video.engineInterval = eInterval * 0.9 + tElapsed * 0.1;
 		}
 		pthread_mutex_unlock(&engine->engineMutex);
 	}

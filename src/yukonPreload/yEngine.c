@@ -357,8 +357,10 @@ static void yEngineStart(Display *dpy, GLXDrawable drawable)
 	
 	if (insets[1] + insets[3] > width) {
 		printf("yEngineStart(): right+left insets > width\n");
+		insets[1] = insets[3] = 0;
 	} else if (insets[0] + insets[2] > width) {
 		printf("yEngineStart(): top+bottom insets > height\n");
+		insets[0] = insets[2] = 0;
 	}
 	
 	engine = yEngineCreate(dpy, drawable);

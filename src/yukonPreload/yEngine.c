@@ -283,12 +283,8 @@ static void *yEngineThreadCallback(void *data)
 		
 		pthread_mutex_lock(&engine->engineMutex);
 		double eInterval = engine->captureStatistics.video.engineInterval;
-		if (eInterval == engine->staticInfo.video.captureInterval) {
-			engine->captureStatistics.video.engineInterval = tElapsed;
-			engine->captureStatistics.video.captureInterval = tElapsed;
-		} else {
-			engine->captureStatistics.video.engineInterval = eInterval * 0.9 + tElapsed * 0.1;
-		}
+		double eDecay = 1.0 / 60.0;
+		engine->captureStatistics.video.engineInterval = eInterval * ( 1.0 - eDecay ) + tElapsed * eDecay;
 		pthread_mutex_unlock(&engine->engineMutex);
 	}
 	
@@ -354,12 +350,18 @@ static void yEngineStart(Display *dpy, GLXDrawable drawable)
 		return;
 	}
 	
-	engine = yEngineCreate(dpy, drawable);
+	printf("yEngineStart(): %p - 0x%08x\n", dpy, drawable);
 	
 	uint64_t insets[4];
 	yConfigInsets(insets);
 	
-	printf("yEngineStart(): %p - 0x%08x\n", dpy, drawable);
+	if (insets[1] + insets[3] > width) {
+		printf("yEngineStart(): right+left insets > width\n");
+	} else if (insets[0] + insets[2] > width) {
+		printf("yEngineStart(): top+bottom insets > height\n");
+	}
+	
+	engine = yEngineCreate(dpy, drawable);
 	
 	printf("yEngineStart(): %p, insets: %llu:%llu:%llu:%llu\n", engine, insets[0], insets[1], insets[2], insets[3]);
 	
@@ -535,14 +537,6 @@ void yEngineCapture(Display *dpy, GLXDrawable drawable)
 
 	width = engine->staticInfo.video.drawableSize.width;
 	height = engine->staticInfo.video.drawableSize.height;
-	
-	/*XGetGeometry(dpy, drawable, &rootWindow, &unused, &unused, &width, &height, &unused, &unused);
-	if (engine->staticInfo.video.drawableSize.width != width || engine->staticInfo.video.drawableSize.height != height) {
-		printf("geometry changed, stoping engine\n");
-		yEngineStop(dpy, drawable);
-
-		return;
-	}*/
 
 	uint64_t bufferStatus = yBufferStatus(engine->dataBuffers.video.videoBuffer);
 	
@@ -552,8 +546,8 @@ void yEngineCapture(Display *dpy, GLXDrawable drawable)
 	
 	double cInterval = engine->captureStatistics.video.captureInterval;
 	int64_t bStatus = 8 - bufferStatus;
-	double iCorrection = ( ( eInterval + bStatus * 100 ) - cInterval ) * 0.1;
-	engine->captureStatistics.video.captureInterval = cInterval * 0.99 + ( cInterval + iCorrection ) * 0.01;
+	double iCorrection = ( eInterval + bStatus * 100 ) - cInterval;
+	engine->captureStatistics.video.captureInterval = cInterval * 0.9 + ( cInterval + iCorrection ) * 0.1;
 	if (engine->captureStatistics.video.captureInterval < engine->staticInfo.video.captureInterval) {
 		engine->captureStatistics.video.captureInterval = engine->staticInfo.video.captureInterval;
 	}

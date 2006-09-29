@@ -3,7 +3,7 @@
 
 static yEngine *engineRegistry[64];
 
-char doCapture = 0;
+static char doCapture;
 
 static void scaleFrameFast(uint32_t *inBuffer, uint32_t *outBuffer, int width, int height)
 {

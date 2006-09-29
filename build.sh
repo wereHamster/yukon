@@ -1,6 +1,6 @@
 #!/bin/sh
 
-function CopyLib {
+CopyLib () {
 	echo "   $2"
 	cp /usr/$1/$2 $HOME/.preload/$1/$3
 	./patcher $HOME/.preload/$1/$3 $2 $3
@@ -8,7 +8,7 @@ function CopyLib {
 	ln -s $3 $HOME/.preload/$1/$so
 }
 
-function RestoreLib {
+RestoreLib () {
 	echo "   $2"
 	so=`objdump -x /usr/$1/$2 | grep SONAME | awk '{ print $2 }'`
 	ln -s yPreload.so $HOME/.preload/$1/$2

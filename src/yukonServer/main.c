@@ -18,27 +18,108 @@
 #include <fcntl.h>
 #include <unistd.h>
 #include <time.h>
+#include <pthread.h>
 
 #include <netinet/in.h>
 #include <arpa/inet.h>
 #include <netdb.h>
 
-
-static char *home;
-static char date[32];
-
-static void buildDate(void)
+static char *date(void)
 {
+	static char sbuf[32];
 	time_t tim = time(NULL);
 	struct tm *now = localtime(&tim);
-	snprintf(date, 32, "%d-%02d-%02d--%02d:%02d:%02d", now->tm_year+1900, now->tm_mon+1, now->tm_mday, now->tm_hour, now->tm_min, now->tm_sec);
+	snprintf(sbuf, 32, "%d-%02d-%02d--%02d:%02d:%02d", now->tm_year+1900, now->tm_mon+1, now->tm_mday, now->tm_hour, now->tm_min, now->tm_sec);
+	return sbuf;
 }
 
-static int openOutput()
+static int output(char *name)
 {
 	char path[4096];
-	snprintf(path, 4096, "%s/yukonOutput/%s.yukon", home, date);
+	snprintf(path, 4096, "%s/yukonOutput/%s.yukon", getenv("HOME"), name);
 	return open(path, O_WRONLY | O_CREAT | O_TRUNC, S_IRUSR | S_IRGRP | S_IROTH);
+}
+
+static pthread_mutex_t mutex;
+static struct thread {
+	pthread_t thread;
+	int socket;
+} threads[16];
+
+static void *loop(void *arg)
+{
+	struct thread *data = arg;
+	
+	pthread_mutex_lock(&mutex);
+	char *now = date();
+	printf("[%s]: >>> %d\n", now, data - threads);
+	int file = output(now);
+	pthread_mutex_unlock(&mutex);
+	
+	if (file < 0) {
+		perror("open");
+		goto out;
+	}
+	
+	size_t bsize = 4096;
+	char buffer[4096];
+	
+	for (;;) {
+		int rb = read(data->socket, buffer, bsize);
+		if (rb == 0) {
+			break;
+		} else if (rb < 0) {
+			if (errno == EINTR)
+				continue;
+			perror("read");
+			goto out;
+		}
+
+		char *p = buffer;
+		do {
+			int wb = write(file, p, rb);
+			if (wb == 0) {
+				printf("filesystem full!\n");
+				exit(0);
+			} else if (wb < 0) {
+				if (errno == EINTR)
+					continue;
+				perror("write");
+				goto out;
+			}
+			p += wb;
+			rb -= wb;
+		} while (rb);
+	}
+	
+out:
+	close(data->socket);
+	close(file);
+	
+	pthread_mutex_lock(&mutex);
+	data->socket = -1;
+	now = date();
+	printf("[%s]: <<< %d\n", now, data - threads);
+	pthread_mutex_unlock(&mutex);
+	
+	return NULL;
+}
+
+
+static void spawn(int socket)
+{
+	pthread_mutex_lock(&mutex);
+	
+	for (int i = 0; i < 16; ++i) {
+		if (threads[i].socket < 0) {
+			threads[i].socket = socket;
+			pthread_create(&threads[i].thread, NULL, loop, (void *) &threads[i]);
+			goto out;
+		}
+	}
+
+out:
+	pthread_mutex_unlock(&mutex);
 }
 
 int main(int argc, char *argv[])
@@ -48,7 +129,12 @@ int main(int argc, char *argv[])
 		return 0;
 	}
 	
-	home = getenv("HOME");
+	pthread_mutex_init(&mutex, NULL);
+	
+	for (int i = 0; i < 16; ++i) {
+		threads[i].socket = -1;
+	}
+	
 	int port = atoi(argv[1]);
 		
 	int fdSocket = socket(AF_INET, SOCK_STREAM, 0);
@@ -68,60 +154,16 @@ int main(int argc, char *argv[])
 		return 0;
 	}
 	
-	while(1) {
+	for (;;) {
 		socklen_t len = sizeof(addr);
 		
-		int fdInput = accept(fdSocket, &addr, &len);
-		if (fdInput < 0) {
+		int client = accept(fdSocket, &addr, &len);
+		if (client < 0) {
 			perror("accept()");
-			break;
+			continue;
 		}
 		
-		buildDate();
-		int fdOutput = openOutput();
-		if (fdOutput < 0) {
-			perror("openOutput()");
-			break;
-		}
-		
-		printf("[%s] => %s:%d\n", date, inet_ntoa(addr.sin_addr), addr.sin_port);
-		
-		size_t bsize = 4096;
-		char buffer[4096];
-		
-		for (;;) {
-			int rb = read(fdInput, buffer, bsize);
-			if (rb == 0) {
-				break;
-			} else if (rb < 0) {
-				if (errno == EINTR)
-					continue;
-				perror("read");
-				exit(0);
-			}
-
-			char *p = buffer;
-			do {
-				int wb = write(fdOutput, p, rb);
-				if (wb == 0) {
-					printf("filesystem full!\n");
-					exit(0);
-				} else if (wb == 0 < 0) {
-					if (errno == EINTR)
-						continue;
-					perror("write");
-					exit(0);
-				}
-				p += wb;
-				rb -= wb;
-			} while (rb);
-		}
-		
-		buildDate();
-		printf("[%s] => end\n", date);
-		
-		close(fdOutput);
-		close(fdInput);
+		spawn(client);
 	}
 	
 	close(fdSocket);

@@ -32,7 +32,7 @@ envArray['amd64'] = envBase.Copy()
 envArray['amd64'].Append(
 	CCFLAGS = ['-m64'],
 	LINKFLAGS = ['-m64'],
-	ASFLAGS = '-f elf -mamd64'
+	ASFLAGS = '-f elf -m amd64'
 )
 
 yukonCoreSource		= [

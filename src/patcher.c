@@ -23,17 +23,9 @@ int main(int argc, char *argv[])
 		return 0;
 	}
 	
-	int len = strlen(argv[2]);
-	
-	if (len != strlen(argv[3])) {
-		printf("Usage: %s [binary] [search] [replace]\n", argv[0]);
-		printf("!!! [search] and [replace] need to have the same length\n");
-		return 0;
-	}
-	
 	int fd = open(argv[1], O_RDWR);
 	if (fd < 0) {
-		printf("Could not open binary\n");
+		perror("open()");
 		return 0;
 	}
 	
@@ -42,6 +34,7 @@ int main(int argc, char *argv[])
 	
 	char *mem = mmap(0, sbuf.st_size, PROT_READ | PROT_WRITE, MAP_SHARED, fd, 0);
 	
+	int len = strlen(argv[2]);
 	for (int i = 0; i < sbuf.st_size - len; ++i) {
 		if (memcmp(mem + i, argv[2], len) == 0) {
 			memcpy(mem + i, argv[3], len);

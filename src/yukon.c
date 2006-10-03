@@ -1,5 +1,78 @@
 
-#include <yukonPreload/yHooks.h>
+#include <yukon.h>
+
+static int doCapture;
+static seomClient *client;
+static KeySym hotkey;
+
+static void yConfigHotkey(char *buffer, int length)
+{
+	char path[4096];
+
+	snprintf(path, 4096, "%s/.yukon/hotkey", getenv("HOME"));
+
+	int fd = open(path, O_RDONLY);
+	if (fd >= 0) {
+		struct stat statBuffer;
+		fstat(fd, &statBuffer);
+		int size = statBuffer.st_size > length ? length : statBuffer.st_size;
+		read(fd, buffer, size);
+		buffer[size - 1] = 0;
+
+		close(fd);
+	} else {
+		strncpy(buffer, "F8", length);
+	}
+}
+
+
+static Time eventTime;
+void yEngineEvent(Display *dpy, XEvent *event)
+{
+	switch(event->type) {
+	case KeyPress:
+		if (event->xkey.keycode == XKeysymToKeycode(dpy, hotkey)) {
+			if (event->xkey.time == eventTime) {
+				return;
+			}
+			
+			eventTime = event->xkey.time;
+			
+			if (client) {
+				printf("yEngineEvent: stop\n");
+				doCapture = 0;
+				seomClientDestroy(client);
+				client = NULL;
+			} else {
+				printf("yEngineEvent: start\n");
+				doCapture = 1;
+			}
+  		}
+		break;
+	default:
+		break;
+	}
+}
+
+void yEngineCapture(Display *dpy, GLXDrawable drawable)
+{
+	if (client == NULL) {		
+		if (doCapture) {
+			client = seomClientCreate(dpy, drawable, "yukon");
+			if (client == NULL) {
+				doCapture = 0;
+				printf("couldn't create seom client\n");
+				return;
+			}
+		} else {
+			return;
+		}
+	}
+	
+	seomClientCapture(client);
+}
+
+
 
 static type_glXGetProcAddressARB orig_glXGetProcAddressARB;
 static type_glXSwapBuffers orig_glXSwapBuffers;
@@ -42,7 +115,7 @@ static void yHooksConstructor()
 		yHooksError(#hookName);                                       \
 	}                                                                 \
 
-	loadHook(glXGetProcAddressARB, gl);
+    loadHook(glXGetProcAddressARB, gl);
     loadHook(glXSwapBuffers, gl);
 
     loadHook(XNextEvent, x11);
@@ -62,7 +135,9 @@ static void yHooksConstructor()
 
     //printf("yukon hooks established !\n");
     
-    yCompressorInit();
+    char buffer[64];
+    yConfigHotkey(buffer, 64);
+    hotkey = XStringToKeysym(buffer);
 }
 
 __attribute__ ((destructor))

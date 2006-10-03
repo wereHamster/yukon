@@ -1,42 +1,44 @@
 #!/bin/sh
 
+LIBDIR=${1:-'lib'}
+
 CopyLib () {
-	echo "   $2"
-	cp /usr/$1/$2 $HOME/.preload/$1/$3
-	./patcher $HOME/.preload/$1/$3 $2 $3
-	so=`objdump -x $HOME/.preload/$1/$3 | grep SONAME | awk '{ print $2 }'`
-	ln -s $3 $HOME/.preload/$1/$so
+	echo "   $1"
+	cp /usr/$LIBDIR/$1 $HOME/.yukon/$LIBDIR/$2
+	./patcher $HOME/.yukon/$LIBDIR/$2 $1 $2
+	so=`objdump -x $HOME/.yukon/$LIBDIR/$2 | grep SONAME | awk '{ print $2 }'`
+	ln -s $2 $HOME/.yukon/$LIBDIR/$so
 }
 
 RestoreLib () {
-	echo "   $2"
-	so=`objdump -x /usr/$1/$2 | grep SONAME | awk '{ print $2 }'`
-	ln -s yPreload.so $HOME/.preload/$1/$2
-	ln -s yPreload.so $HOME/.preload/$1/$so
+	echo "   $1"
+	so=`objdump -x /usr/$LIBDIR/$1 | grep SONAME | awk '{ print $2 }'`
+	ln -s libyukon.so $HOME/.yukon/$LIBDIR/$1
+	ln -s libyukon.so $HOME/.yukon/$LIBDIR/$so
 }
 
 echo "Cleaning directory..."
-rm -Rf $HOME/.preload/$1 && mkdir -p $HOME/.preload/$1
+rm -Rf $HOME/.yukon/$LIBDIR && mkdir -p $HOME/.yukon/$LIBDIR
 
 echo "Compiling patcher..."
-gcc -o patcher src/patcher/main.c -std=c99
+scons -s patcher
 
 echo "Duplicating libraries..."
-CopyLib $1 libGL.so libFG.so
-CopyLib $1 libX11.so libX13.so
+CopyLib libGL.so libFG.so
+CopyLib libX11.so libX13.so
 
 echo "Building yukon..."
-LIBPATH=$HOME/.preload/$1 scons -s $2
+LIBPATH=$HOME/.yukon/$LIBDIR scons -s libyukon.so
 
 echo "Restoring libraries..."
-cp build/$2/yPreload.$2.so $HOME/.preload/$1/yPreload.so
+cp libyukon.so $HOME/.yukon/$LIBDIR/
 
-RestoreLib $1 libGL.so
-RestoreLib $1 libX11.so
+RestoreLib libGL.so
+RestoreLib libX11.so
 
 echo "Cleaning up..."
-rm patcher
+scons -s -c
 
 echo ""
-echo "Please add \"\$HOME/.preload/$1\" to LD_LIBRARY_PATH"
+echo "Please make sure LD_LIBRARY_PATH points to \"\$HOME/.yukon/lib\""
 echo ""

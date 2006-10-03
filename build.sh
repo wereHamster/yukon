@@ -40,5 +40,5 @@ echo "Cleaning up..."
 scons -s -c
 
 echo ""
-echo "Please make sure LD_LIBRARY_PATH points to \"\$HOME/.yukon/lib\""
+echo "Please make sure LD_LIBRARY_PATH points to \"\$HOME/.yukon/$LIBDIR\""
 echo ""

@@ -25,14 +25,14 @@ envArray['x86'].Append(
 	CCFLAGS = ['-m32'],
 	LINKFLAGS = ['-m32'],
 	LIBPATH = ['/emul/linux/x86/usr/lib/'],
-	ASFLAGS = '-f elf32'
+	ASFLAGS = '-f elf -m x86'
 )
 
 envArray['amd64'] = envBase.Copy()
 envArray['amd64'].Append(
 	CCFLAGS = ['-m64'],
 	LINKFLAGS = ['-m64'],
-	ASFLAGS = '-f elf64'
+	ASFLAGS = '-f elf -mamd64'
 )
 
 yukonCoreSource		= [

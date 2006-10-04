@@ -10,8 +10,12 @@ env = Environment(
 objPatcher = env.Program('patcher', 'src/patcher.c')
 
 env = env.Copy()
-env.Append(LIBS = ['dl', 'pthread', 'FG', 'X13', 'seom'])
-env.Append(LIBPATH = os.getenv('LIBPATH'))
+env.Append(
+	CCFLAGS = [os.getenv('CFLAGS')],
+	LIBS = ['dl', 'pthread', 'FG', 'X13', 'seom'],
+	LIBPATH = os.getenv('LIBPATH'),
+	LINKFLAGS = [os.getenv('LDFLAGS')],
+)
 objLibrary = env.SharedLibrary('yukon', 'src/yukon.c')
 
 env.Default([ objPatcher ])

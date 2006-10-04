@@ -3,7 +3,11 @@
 LIBDIR=${1:-'lib'}
 
 CopyLib () {
-	echo "   $1"
+	if [ ! -e "/usr/$LIBDIR/$1" ]; then
+		echo "   /usr/$LIBDIR/$1 doesn't exist"
+		exit
+	fi
+	
 	cp /usr/$LIBDIR/$1 $HOME/.yukon/$LIBDIR/$2
 	./patcher $HOME/.yukon/$LIBDIR/$2 $1 $2
 	so=`objdump -x $HOME/.yukon/$LIBDIR/$2 | grep SONAME | awk '{ print $2 }'`
@@ -11,7 +15,6 @@ CopyLib () {
 }
 
 RestoreLib () {
-	echo "   $1"
 	so=`objdump -x /usr/$LIBDIR/$1 | grep SONAME | awk '{ print $2 }'`
 	ln -s libyukon.so $HOME/.yukon/$LIBDIR/$so
 	ln -s $so $HOME/.yukon/$LIBDIR/$1

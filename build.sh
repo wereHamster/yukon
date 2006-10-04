@@ -13,8 +13,8 @@ CopyLib () {
 RestoreLib () {
 	echo "   $1"
 	so=`objdump -x /usr/$LIBDIR/$1 | grep SONAME | awk '{ print $2 }'`
-	ln -s libyukon.so $HOME/.yukon/$LIBDIR/$1
 	ln -s libyukon.so $HOME/.yukon/$LIBDIR/$so
+	ln -s $so $HOME/.yukon/$LIBDIR/$1
 }
 
 echo "Cleaning directory..."

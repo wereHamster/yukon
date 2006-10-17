@@ -39,12 +39,12 @@ void yEngineEvent(Display *dpy, XEvent *event)
 			eventTime = event->xkey.time;
 			
 			if (client) {
-				printf("yEngineEvent: stop\n");
+				printf("yEngineEvent(): stop\n");
 				doCapture = 0;
 				seomClientDestroy(client);
 				client = NULL;
 			} else {
-				printf("yEngineEvent: start\n");
+				printf("yEngineEvent(): start\n");
 				doCapture = 1;
 			}
   		}
@@ -61,7 +61,7 @@ void yEngineCapture(Display *dpy, GLXDrawable drawable)
 			client = seomClientCreate(dpy, drawable, "yukon");
 			if (client == NULL) {
 				doCapture = 0;
-				printf("couldn't create seom client\n");
+				printf("yEngineCapture(): couldn't create seom client\n");
 				return;
 			}
 		} else {
@@ -243,7 +243,7 @@ int XPeekIfEvent(Display * dpy, XEvent * event, Bool(*predicate) (), XPointer ar
 
 void (*glXGetProcAddressARB(const GLubyte *procName))(void)
 {
-	if (strcmp(procName, "glXSwapBuffers") == 0) {
+	if (strcmp((char *)procName, "glXSwapBuffers") == 0) {
 		return (void *) glXSwapBuffers;
 	}
 	

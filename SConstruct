@@ -17,5 +17,3 @@ env.Append(
 	LINKFLAGS = [os.getenv('LDFLAGS')],
 )
 objLibrary = env.SharedLibrary('yukon', 'src/yukon.c')
-
-env.Default([ objPatcher ])

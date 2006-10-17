@@ -58,7 +58,16 @@ void yEngineCapture(Display *dpy, GLXDrawable drawable)
 {
 	if (client == NULL) {		
 		if (doCapture) {
-			client = seomClientCreate(dpy, drawable, "yukon");
+			seomConfig *config = seomConfigCreate("yukon");
+			
+			Window root;
+            unsigned int width, height, uunused;
+            int sunused;
+
+            XGetGeometry(dpy, drawable, &root, &sunused, &sunused, &width, &height, &uunused, &uunused);
+            
+			client = seomClientCreate(config, width, height);
+			seomConfigDestroy(config);
 			if (client == NULL) {
 				doCapture = 0;
 				printf("yEngineCapture(): couldn't create seom client\n");
@@ -69,7 +78,7 @@ void yEngineCapture(Display *dpy, GLXDrawable drawable)
 		}
 	}
 	
-	seomClientCapture(client);
+	seomClientCapture(client, 0, 0);
 }
 
 

@@ -249,7 +249,9 @@ int XPeekIfEvent(Display * dpy, XEvent * event, Bool(*predicate) (), XPointer ar
 
 void (*glXGetProcAddressARB(const GLubyte *procName))(void)
 {
-	if (strcmp((char *)procName, "glXSwapBuffers") == 0) {
+	if (strcmp((char *)procName, "glXGetProcAddressARB") == 0) {
+		return (void *) glXGetProcAddressARB;
+	} else if (strcmp((char *)procName, "glXSwapBuffers") == 0) {
 		return (void *) glXSwapBuffers;
 	}
 	

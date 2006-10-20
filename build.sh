@@ -32,7 +32,7 @@ CopyLib libGL.so libFG.so
 CopyLib libX11.so libX13.so
 
 echo "Building yukon..."
-$CC -shared -o libyukon.so -Iinclude -fPIC -L$HOME/.yukon/$LIBDIR -lX13 -lFG src/yukon.c
+$CC -shared -o libyukon.so -Iinclude -fPIC -L$HOME/.yukon/$LIBDIR -lX13 -lFG -lseom src/yukon.c
 
 echo "Restoring libraries..."
 cp libyukon.so $HOME/.yukon/$LIBDIR/

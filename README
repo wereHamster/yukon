@@ -1,3 +1,28 @@
+AUTHORS
+------------------------------------------------------------------------------
+Tom: tom@dbservice.com (98% of code)
+Cubicool: jeremy@emperorlinux.com (2% of code)
+
+
+INTRODUCTION
+------------------------------------------------------------------------------
+
+Welcome to yukon! If you haven't done so already, please go take a look at:
+
+	http://www.neopsis.com/projects/yukon
+
+This site typically covers all the basics of setup, configuration, and
+troubleshooting. However, this document will act as a supplement to that
+information.
+
+First and foremost, you MUST have libseom installed! Yukon is now built and
+linked against Seom, and will not run otherwise. Second of all, please
+realize that Yukon and Seom are still beta applications, and so there
+will be bugs. ;)
+
+
+BUILDING
+------------------------------------------------------------------------------
 
 Use the 'build.sh' script to compile and install yukon. The script uses two
 environment variables if they are present: 'CC' and 'LIBPATH'. Usually you
@@ -10,4 +35,28 @@ Note that some distributions don't have libX11.so under /usr/lib32 (gentoo
 for example). On such systems you need to copy the 32bit libX11.so to
 /usr/lib32 or make a symlink from /usr/lib32/libX11.so to the real location.
 On gentoo that would be (as root):
-$ ln -s /emul/linux/x86/usr/lib/libX11.so /usr/lib32/libX11.so
+
+	$ ln -s /emul/linux/x86/usr/lib/libX11.so /usr/lib32/libX11.so
+
+Once the build completes, you'll notice a new directory called .yukon has
+been created in your HOME directory. Don't worry too much about it's 
+purpose for now, it is mainly there to facilitate the libGL interception
+Yukon must implement to function properly.
+
+
+RUNNING
+------------------------------------------------------------------------------
+
+stuff stuff stuff stuff
+
+
+CONFIGURATION
+------------------------------------------------------------------------------
+
+stuff stuff stuff stuff
+
+OUTPUT = path:///tmp
+FPS    = 30.0
+HOTKEY = F12
+INSETS = 0 0 0 0
+SCALE  = half

@@ -1,0 +1,13 @@
+
+Use the 'build.sh' script to compile and install yukon. The script uses two
+environment variables if they are present: 'CC' and 'LIBPATH'. Usually you
+don't need to set them, but if you have a 64bit userspace and want to
+compile yukon into a 32bit library, you need to set 'CC="gcc -m32"' and
+'LIBPATH="lib32"', so that the compiler knows to produce 32bit objects and
+where it can find the 32bit libX11.so and libGL.so.
+
+Note that some distributions don't have libX11.so under /usr/lib32 (gentoo
+for example). On such systems you need to copy the 32bit libX11.so to
+/usr/lib32 or make a symlink from /usr/lib32/libX11.so to the real location.
+On gentoo that would be (as root):
+$ ln -s /emul/linux/x86/usr/lib/libX11.so /usr/lib32/libX11.so

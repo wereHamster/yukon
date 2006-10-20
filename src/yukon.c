@@ -46,7 +46,7 @@ static void yConfigOptionScale(char *value)
 static void yConfigOptionHotkey(char *value)
 {
 	if (argcheck(value))
-		sscanf(value, "%8s", hotkeybuf);
+		sscanf(value, "%32s", hotkeybuf);
 }
 
 // TODO: Please note! This parsing function isn't perfect! Parsing in C is
@@ -104,11 +104,6 @@ static void yConfigParse(char *configfile)
 static void yConfigLoad(void)
 {
 	char buffer[1024];
-	char *envoutput = getenv("YUKON_OUTPUT");
-	char *envfps = getenv("YUKON_FPS");
-	char *envhotkey = getenv("YUKON_HOTKEY");
-	char *envscale = getenv("YUKON_SCALE");
-	char *envinsets = getenv("YUKON_INSETS");
 
 	strncpy(output, "file:///tmp/yukon.seom", sizeof(output));
 	strncpy(scale, "full", sizeof(scale));
@@ -120,11 +115,11 @@ static void yConfigLoad(void)
 	yConfigParse(buffer);
 
 	// Setup the ENV overrides.
-	yConfigOptionOutput(envoutput);
-	yConfigOptionFPS(envfps);
-	yConfigOptionHotkey(envhotkey);
-	yConfigOptionScale(envscale);
-	yConfigOptionInsets(envinsets);
+	yConfigOptionOutput(getenv("YUKON_OUTPUT"));
+	yConfigOptionFPS(getenv("YUKON_FPS"));
+	yConfigOptionHotkey(getenv("YUKON_HOTKEY"));
+	yConfigOptionScale(getenv("YUKON_SCALE"));
+	yConfigOptionInsets(getenv("YUKON_INSETS"));
 
 	hotkey = XStringToKeysym(hotkeybuf);
 

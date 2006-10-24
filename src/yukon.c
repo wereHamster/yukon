@@ -5,8 +5,8 @@ static seomClient *client;
 static KeySym hotkey;
 static char hotkeybuf[32];
 static char output[1024];
-static char scale[5];
-static int insets[4] = { 0, 0, 0, 0 };
+static unsigned int scale;
+static unsigned int insets[4] = { 0, 0, 0, 0 };
 static float fps = 30.0f;
 
 static int argcheck(char *value)
@@ -34,13 +34,13 @@ static void yConfigOptionFPS(char *value)
 static void yConfigOptionInsets(char *value)
 {
 	if (argcheck(value))
-		sscanf(value, "%d %d %d %d", &insets[0], &insets[1], &insets[2], &insets[3]);
+		sscanf(value, "%u %u %u %u", &insets[0], &insets[1], &insets[2], &insets[3]);
 }
 
 static void yConfigOptionScale(char *value)
 {
 	if (argcheck(value))
-		sscanf(value, "%5s", scale);
+		sscanf(value, "%u", &scale);
 }
 
 static void yConfigOptionHotkey(char *value)
@@ -106,7 +106,7 @@ static void yConfigLoad(void)
 	char buffer[1024];
 
 	strncpy(output, "file:///tmp/yukon.seom", sizeof(output));
-	strncpy(scale, "full", sizeof(scale));
+	scale = 0;
 	strncpy(hotkeybuf, "F8", sizeof(hotkeybuf));
 
 	sprintf(buffer, "%s/.yukon/conf", getenv("HOME"));
@@ -126,10 +126,10 @@ static void yConfigLoad(void)
 	printf(
 		"Yukon setup information:\n"
 		" - OUTPUT: %s\n"
-		" - SCALE: %s\n"
+		" - SCALE: %u\n"
 		" - HOTKEY: %s\n"
 		" - FPS: %.1f\n"
-		" - INSETS: %d %d %d %d\n",
+		" - INSETS: %u %u %u %u\n",
 		output, scale, hotkeybuf, fps, insets[0], insets[1], insets[2], insets[3]);
 }
 
@@ -168,11 +168,24 @@ void yEngineCapture(Display * dpy, GLXDrawable drawable)
 			Window root;
 			unsigned int width, height, uunused;
 			int sunused;
+			seomClientConfig config;
 
 			XGetGeometry(dpy, drawable, &root, &sunused, &sunused, &width, &height, &uunused, &uunused);
 
 			yConfigLoad();
-			client = seomClientCreate(output, width, height, fps);
+			
+			if (insets[0] + insets[2] > height || insets[1] + insets[3] > width) {
+				printf("yEngineCapture(): insets too big, setting them to zero\n");
+				insets[0] = insets[1] = insets[2] = insets[3] = 0;
+			}
+
+			config.size[0] = width - (insets[1] + insets[3]);
+			config.size[1] = height - (insets[0] + insets[2]);
+			config.scale = scale;
+			config.fps = fps;
+			config.output = output;
+
+			client = seomClientCreate(&config);
 
 			if (client == NULL) {
 				doCapture = 0;
@@ -183,7 +196,7 @@ void yEngineCapture(Display * dpy, GLXDrawable drawable)
 			return;
 		}
 	}
-	seomClientCapture(client, 0, 0);
+	seomClientCapture(client, insets[3], insets[2]);
 }
 
 static type_glXGetProcAddressARB orig_glXGetProcAddressARB;

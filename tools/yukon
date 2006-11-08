@@ -1,0 +1,43 @@
+#!/usr/bin/env bash
+
+if [ -z "${1}" ]; then
+	echo -e "usage: yukon APPLICATION <ARGS>\n"
+	echo -e "\tYou can use this wrapper script to run any program using the"
+	echo -e "\tyukon library. Please note that it will perform various sanity"
+	echo -e "\tchecks beforehand, which must pass. Otherwise, error messages"
+	echo -e "\twill be printed describing the problem."
+	echo -e "\nWebpage - http://www.neopsis.com/projects/yukon"
+	echo -e "Version - $Id$"
+
+else
+	YUKON_DIR="${HOME}/.yukon/lib"
+	YUKON_LIB=(
+		"libFG.so"
+		"libFG.so.1"
+		"libGL.so"
+		"libGL.so.1"
+		"libX11.so"
+		"libX11.so.6"
+		"libX13.so"
+		"libX13.so.6"
+		"libyukon.so"
+	)
+
+	if [ ! -d "${YUKON_DIR}" ]; then
+		echo "Unable to find ${YUKON_DIR}"
+
+		exit 1
+	fi
+
+	for LIB in ${YUKON_LIB}; do
+		LIBRARY="${YUKON_DIR}/${LIB}"
+
+		if [ ! -f "${LIBRARY}" ]; then
+			echo "Unable to find library file ${LIBRARY}"
+
+			exit 2
+		fi
+	done
+
+	eval "LD_LIBRARY_PATH=${YUKON_DIR}:${LD_LIBRARY_PATH} ${*}"
+fi

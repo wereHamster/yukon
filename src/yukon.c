@@ -1,3 +1,5 @@
+// $Id$
+
 #include <yukon.h>
 
 static int doCapture;
@@ -8,6 +10,7 @@ static char output[1024];
 static unsigned int scale;
 static unsigned int insets[4] = { 0, 0, 0, 0 };
 static float fps = 30.0f;
+static int verbose = 0;
 
 static int argcheck(char *value)
 {
@@ -47,6 +50,12 @@ static void yConfigOptionHotkey(char *value)
 {
 	if (argcheck(value))
 		sscanf(value, "%32s", hotkeybuf);
+}
+
+static void yConfigOptionVerbose(char *value)
+{
+	if (argcheck(value))
+		if (!strncmp(value, "true", 4)) verbose = 1;
 }
 
 // TODO: Please note! This parsing function isn't perfect! Parsing in C is
@@ -93,6 +102,8 @@ static void yConfigParse(char *configfile)
 				yConfigOptionScale(pos);
 			else if (!strncmp(option, "HOTKEY", 6))
 				yConfigOptionHotkey(pos);
+			else if (!strncmp(option, "VERBOSE", 7))
+				yConfigOptionVerbose(pos);
 
 			linenum++;
 		}
@@ -120,10 +131,11 @@ static void yConfigLoad(void)
 	yConfigOptionHotkey(getenv("YUKON_HOTKEY"));
 	yConfigOptionScale(getenv("YUKON_SCALE"));
 	yConfigOptionInsets(getenv("YUKON_INSETS"));
+	yConfigOptionVerbose(getenv("YUKON_VERBOSE"));
 
 	hotkey = XStringToKeysym(hotkeybuf);
 
-	printf(
+	if (verbose) printf(
 		"Yukon setup information:\n"
 		" - OUTPUT: %s\n"
 		" - SCALE: %u\n"

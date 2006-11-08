@@ -1,0 +1,6 @@
+- Consider support for application "namespaces" again using /proc/self.
+- Create an automated test suite. I've noticed a lot of crashing lately
+  on my own system, which I plan on investigating w/ valgrind.
+- Finish the template yukon.conf file. :)
+- FIX THE BUILD SYSTEM. :) It's not broken or anything, I just need to
+  make it a little more versatile.

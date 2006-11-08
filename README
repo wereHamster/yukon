@@ -1,3 +1,5 @@
+$Id*
+
 AUTHORS
 ------------------------------------------------------------------------------
 Tom: tom@dbservice.com (98% of code)
@@ -47,16 +49,44 @@ Yukon must implement to function properly.
 RUNNING
 ------------------------------------------------------------------------------
 
-stuff stuff stuff stuff
+Explaining "how" yukon works can be little difficult--therefore, we've
+provided a wrapper script written in Bash that you can use to greatly
+simplifiy matters. Just run the "yukon" script (found here in the tools
+directory, or perhaps installed locally in your path) with your application
+and it's parameters following. For example:
+
+	$ ./tools/yukon glxgears -printfps
+
+For those interested, Yukon works by intercepting calls to glXSwapBuffers
+and, before invoking the real function, copies the color buffer and makes a
+simple image stream out of it, which you can feed to a server or write to disk
+directly.
 
 
 CONFIGURATION
 ------------------------------------------------------------------------------
 
-stuff stuff stuff stuff
+You'll probably want to use the yukon.conf file in the tools directory as
+a starting point for you own configuration setups. However, the following
+briefly describes what goes on when Yukon is invoked.
 
-OUTPUT = path:///tmp
-FPS    = 30.0
-HOTKEY = F12
-INSETS = 0 0 0 0
-SCALE  = half
+1. Yukon checks for the file /etc/yukon.conf
+2. Yukon checks for the file $HOME/.yukon/conf; these values
+   override the system defaults.
+3. Yukon checks for the various YUKON_* environment variables. These
+   values override anything else, and is the method I use personally. :)
+4. Lastly, Yukon will use the protocol specified by the OUTPUT configuration
+   setting to determine "what to do" with the image stream.
+
+While setting configuration parameters in /etc/yukon.conf or $HOME/.yukon/conf
+is fairly straightforward, using environment variables can be slightly more
+tricky. Basically, each option available to Yukon can also be overridden
+using it's named prefixed with YUKON_ in a shell. For example, if you wanted
+to run glxgears and use Yukon's verbose logging, try running:
+
+	$ YUKON_VERBOSE=true ./tools/yukon glxgears
+
+For variables that contain spaces, enclose the correspond shell declaration
+in double quotes, i.e.:
+
+	$ YUKON_INSETS="10 10 10 10" yukon glxgears

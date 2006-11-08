@@ -23,12 +23,14 @@ else
 		"libyukon.so"
 	)
 
+	# Make sure the user has the yukon directory
 	if [ ! -d "${YUKON_DIR}" ]; then
 		echo "Unable to find ${YUKON_DIR}"
 
 		exit 1
 	fi
 
+	# Make sure all the libraries exist
 	for LIB in ${YUKON_LIB}; do
 		LIBRARY="${YUKON_DIR}/${LIB}"
 
@@ -38,6 +40,36 @@ else
 			exit 2
 		fi
 	done
+
+	function MD5Check() {
+		if which md5sum > /dev/null; then
+			MD5_LOCAL="$(md5sum /usr/lib/lib${1}.so | cut -f 1 -d ' ')"
+			MD5_YUKON=""
+
+			if [ -r "${YUKON_DIR}/lib${1}.so.md5" ]; then
+				MD5_YUKON="$(cat ${YUKON_DIR}/lib${1}.so.md5)"
+
+				# Compare them!
+				if [ "${MD5_LOCAL}" != "${MD5_YUKON}" ]; then
+					echo "It looks like your locally installed version of lib${1} and"
+					echo "the version of lib${1} Yukon uses are different. More than"
+					echo "likely your distro have updated one library or the other, and"
+					echo "you should probably rebuild and reinstall Yukon."
+				fi
+
+			else
+				echo "This version of Yukon does not appear to have created an MD5 checksum for"
+				echo "lib${1} during installation. To be safe you should reinstall Yukon and"
+				echo "confirm that you have the md5sum binary installed."
+			fi
+			
+		else
+			echo "Unable to find the md5sum binary; skipping comparisons."
+		fi
+	}
+
+	MD5Check GL
+	MD5Check X11
 
 	eval "LD_LIBRARY_PATH=${YUKON_DIR}:${LD_LIBRARY_PATH} ${*}"
 fi

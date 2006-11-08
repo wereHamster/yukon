@@ -10,6 +10,11 @@ CopyLib () {
 	fi
 	
 	cp /usr/$LIBDIR/$1 $HOME/.yukon/$LIBDIR/$2
+	
+	if which md5sum > /dev/null; then
+		md5sum /usr/$LIBDIR/$1 | cut -f 1 -d ' ' > $HOME/.yukon/lib/$1.md5
+	fi
+
 	./patcher $HOME/.yukon/$LIBDIR/$2 $1 $2
 	so=`objdump -x $HOME/.yukon/$LIBDIR/$2 | grep SONAME | awk '{ print $2 }'`
 	ln -s $2 $HOME/.yukon/$LIBDIR/$so

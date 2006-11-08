@@ -53,7 +53,7 @@ else
 				if [ "${MD5_LOCAL}" != "${MD5_YUKON}" ]; then
 					echo "It looks like your locally installed version of lib${1} and"
 					echo "the version of lib${1} Yukon uses are different. More than"
-					echo "likely your distro have updated one library or the other, and"
+					echo "likely your distro has updated one library or the other, and"
 					echo "you should probably rebuild and reinstall Yukon."
 				fi
 

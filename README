@@ -51,7 +51,7 @@ RUNNING
 
 Explaining "how" yukon works can be little difficult--therefore, we've
 provided a wrapper script written in Bash that you can use to greatly
-simplifiy matters. Just run the "yukon" script (found here in the tools
+simplify matters. Just run the "yukon" script (found here in the tools
 directory, or perhaps installed locally in your path) with your application
 and it's parameters following. For example:
 

@@ -7,7 +7,7 @@ if [ -z "${1}" ]; then
 	echo -e "\tchecks beforehand, which must pass. Otherwise, error messages"
 	echo -e "\twill be printed describing the problem."
 	echo -e "\nWebpage - http://www.neopsis.com/projects/yukon"
-	echo -e "Version - $Id$"
+	echo -e "Version - \$Id$"
 
 else
 	YUKON_DIR="${HOME}/.yukon/lib"

@@ -12,7 +12,7 @@ CopyLib () {
 	cp /usr/$LIBDIR/$1 $HOME/.yukon/$LIBDIR/$2
 	
 	if which md5sum > /dev/null; then
-		md5sum /usr/$LIBDIR/$1 | cut -f 1 -d ' ' > $HOME/.yukon/lib/$1.md5
+		md5sum /usr/$LIBDIR/$1 | cut -f 1 -d ' ' > $HOME/.yukon/$LIBDIR/$1.md5
 	fi
 
 	./patcher $HOME/.yukon/$LIBDIR/$2 $1 $2
@@ -37,7 +37,7 @@ CopyLib libGL.so libFG.so
 CopyLib libX11.so libX13.so
 
 echo "Building yukon..."
-$CC -shared -o libyukon.so -Iinclude -fPIC -L$HOME/.yukon/$LIBDIR -lX13 -lFG -lseom src/yukon.c
+$CC -shared -o libyukon.so -Iinclude -O3 -fPIC -L$HOME/.yukon/$LIBDIR -lX13 -lFG -lseom src/yukon.c
 
 echo "Restoring libraries..."
 cp libyukon.so $HOME/.yukon/$LIBDIR/

@@ -1,5 +1,7 @@
 #!/usr/bin/env bash
 
+LIBDIR=${LIBDIR:-'lib'}
+
 if [ -z "${1}" ]; then
 	echo -e "usage: yukon APPLICATION <ARGS>\n"
 	echo -e "\tYou can use this wrapper script to run any program using the"
@@ -10,7 +12,7 @@ if [ -z "${1}" ]; then
 	echo -e "Version - \$Id$"
 
 else
-	YUKON_DIR="${HOME}/.yukon/lib"
+	YUKON_DIR="${HOME}/.yukon/${LIBDIR}"
 	YUKON_LIB=(
 		"libFG.so"
 		"libFG.so.1"
@@ -43,7 +45,7 @@ else
 
 	function MD5Check() {
 		if which md5sum > /dev/null; then
-			MD5_LOCAL="$(md5sum /usr/lib/lib${1}.so | cut -f 1 -d ' ')"
+			MD5_LOCAL="$(md5sum /usr/${LIBDIR}/lib${1}.so | cut -f 1 -d ' ')"
 			MD5_YUKON=""
 
 			if [ -r "${YUKON_DIR}/lib${1}.so.md5" ]; then

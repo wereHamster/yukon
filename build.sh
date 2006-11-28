@@ -1,54 +1,62 @@
 #!/bin/sh
 
 LIBDIR=${LIBDIR:-'lib'}
+USRDIR="${HOME}/.yukon/${LIBDIR}"
 CC=${CC:-'gcc'}
 
-CopyLib () {
-	if [ ! -e "/usr/$LIBDIR/$1" ]; then
-		echo "   /usr/$LIBDIR/$1 doesn't exist"
-		exit
+LibPrepare() {
+	echo -n "."
+
+	if [ ! -e "/usr/${LIBDIR}/${1}" ]; then
+		echo -e "\n '/usr/${LIBDIR}/${1}' doesn't exist"
+		exit 1
 	fi
-	
-	cp /usr/$LIBDIR/$1 $HOME/.yukon/$LIBDIR/$2
-	
+
+	cp /usr/${LIBDIR}/${1} ${USRDIR}/${2}
+
 	if which md5sum > /dev/null; then
-		md5sum /usr/$LIBDIR/$1 | cut -f 1 -d ' ' > $HOME/.yukon/$LIBDIR/$1.md5
+		md5sum /usr/${LIBDIR}/${1} | cut -f 1 -d ' ' > ${USRDIR}/${1}.md5
 	fi
 
-	./patcher $HOME/.yukon/$LIBDIR/$2 $1 $2
-	so=`objdump -x $HOME/.yukon/$LIBDIR/$2 | grep SONAME | awk '{ print $2 }'`
-	ln -s $2 $HOME/.yukon/$LIBDIR/$so
+	./patcher ${USRDIR}/${2} ${1} ${2}
+	local SONAME=$(objdump -x ${USRDIR}/${2} | grep SONAME | awk '{ print $2 }')
+	ln -s ${2} ${USRDIR}/${SONAME}
 }
 
-RestoreLib () {
-	so=`objdump -x /usr/$LIBDIR/$1 | grep SONAME | awk '{ print $2 }'`
-	ln -s libyukon.so $HOME/.yukon/$LIBDIR/$so
-	ln -s $so $HOME/.yukon/$LIBDIR/$1
+LibRestore() {
+	echo -n "."
+
+	local SONAME=$(objdump -x /usr/${LIBDIR}/${1} | grep SONAME | awk '{ print $2 }')
+	ln -s libyukon.so ${USRDIR}/${SONAME}
+	ln -s ${SONAME} ${USRDIR}/${1}
 }
 
-echo "Cleaning directory..."
-rm -Rf $HOME/.yukon/$LIBDIR && mkdir -p $HOME/.yukon/$LIBDIR
+echo -n "."
+rm -Rf ${USRDIR} && mkdir -p ${USRDIR}
 
-echo "Compiling patcher..."
-$CC -o patcher -std=c99 -pipe -O3 src/patcher.c
+echo -n "."
+${CC} -o patcher -std=c99 -pipe -O3 src/patcher.c
 
-echo "Duplicating libraries..."
-CopyLib libGL.so libFG.so
-CopyLib libX11.so libX13.so
+echo -n "."
+LibPrepare libGL.so libFG.so
+LibPrepare libX11.so libX13.so
 
-echo "Building yukon..."
-$CC -shared -o libyukon.so -Iinclude -O3 -fPIC -L$HOME/.yukon/$LIBDIR -lX13 -lFG -lseom src/yukon.c
+echo -n "."
+${CC} -shared -o libyukon.so -Iinclude -O3 -fPIC -L${USRDIR} -lX13 -lFG -lseom src/yukon.c
 
-echo "Restoring libraries..."
-cp libyukon.so $HOME/.yukon/$LIBDIR/
+echo -n "."
+cp libyukon.so ${USRDIR}/
 
-RestoreLib libGL.so
-RestoreLib libX11.so
+LibRestore libGL.so
+LibRestore libX11.so
 
-echo "Cleaning up..."
+echo -n "."
 rm patcher
 rm libyukon.so
 
+echo " yukon was installed successfully"
 echo ""
-echo "Please make sure LD_LIBRARY_PATH points to \"\$HOME/.yukon/$LIBDIR\""
+echo "Before you start your application, please make sure that"
+echo "LD_LIBRARY_PATH points to \"${USRDIR}\""
+echo "or use the \"yukon\" script located in the \"tools\" subdirectory."
 echo ""

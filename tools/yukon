@@ -22,7 +22,7 @@ if [ ! -d "${USRDIR}" ]; then
 	exit 2
 fi
 
-function MD5Check() {
+MD5Check() {
 	if which md5sum > /dev/null; then
 		local ORIG="$(md5sum /usr/${LIBDIR}/${1} | cut -f 1 -d ' ')"
 

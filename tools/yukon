@@ -14,7 +14,7 @@ fi
 
 LIBDIR=${LIBDIR:-'lib'}
 USRDIR="${HOME}/.yukon/${LIBDIR}"
-SYSLIB=( "libGL.so" "libX11.so" )
+SYSLIB="libGL.so libX11.so"
 
 # Make sure the user has the yukon directory
 if [ ! -d "${USRDIR}" ]; then

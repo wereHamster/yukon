@@ -20,13 +20,13 @@ int main(int argc, char *argv[])
 {
 	if (argc != 4) {
 		printf("Usage: %s [binary] [search] [replace]\n", argv[0]);
-		return 0;
+		return 1;
 	}
 	
 	int fd = open(argv[1], O_RDWR);
 	if (fd < 0) {
 		perror("open()");
-		return 0;
+		return 1;
 	}
 	
 	struct stat sbuf;

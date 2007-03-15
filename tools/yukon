@@ -13,4 +13,4 @@ fi
 
 LIBDIR=${LIBDIR:-'lib'}
 
-eval "LD_LIBRARY_PATH=/usr/${LIBDIR}/yukon:${LD_LIBRARY_PATH} ${*}"
+eval "LD_LIBRARY_PATH=/usr/local/${LIBDIR}/yukon:${LD_LIBRARY_PATH} ${*}"

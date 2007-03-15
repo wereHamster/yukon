@@ -1,6 +1,6 @@
 
 DESTDIR  = 
-PREFIX   = /usr/lib
+PREFIX   = /usr/local
 LIBDIR   = lib
 
 CC       = gcc

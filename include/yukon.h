@@ -2,6 +2,8 @@
 #ifndef __YUKON_H__
 #define __YUKON_H__
 
+#include <stdarg.h>
+
 #include <seom/seom.h>
 
 #include <X11/Xlib.h>
@@ -11,23 +13,21 @@
 #include <GL/glext.h>
 #include <GL/glx.h>
 
+void yukonCapture(Display *dpy, GLXDrawable drawable);
+void yukonConfig(void);
+void yukonEvent(Display *dpy, XEvent *event);
+void yukonLog(unsigned long logLevel, const char *fmt, ...);
 
-typedef int 	(*type_XNextEvent)				(Display *dpy, XEvent *event);
-typedef int 	(*type_XPeekEvent)				(Display *dpy, XEvent *event);
-typedef int 	(*type_XWindowEvent)			(Display *dpy, Window w, long mask, XEvent *event);
-typedef Bool 	(*type_XCheckWindowEvent)		(Display *dpy, Window w, long mask, XEvent *event);
-typedef int 	(*type_XMaskEvent)				(Display *dpy, long mask, XEvent *event);
-typedef Bool 	(*type_XCheckMaskEvent)			(Display *dpy, long mask, XEvent *event);
-typedef Bool 	(*type_XCheckTypedEvent)		(Display *dpy, int type, XEvent *event);
-typedef Bool 	(*type_XCheckTypedWindowEvent)	(Display *dpy, Window w, int type, XEvent *event);
+typedef struct {
+	unsigned long logLevel;
+	KeySym hotkey;
 
-typedef int 	(*type_XIfEvent)				(Display *dpy, XEvent *event, Bool (*predicate)(), XPointer arg);
-typedef Bool 	(*type_XCheckIfEvent) 			(Display *dpy, XEvent *event, Bool (*predicate)(), XPointer arg);
-typedef int 	(*type_XPeekIfEvent)			(Display *dpy, XEvent *event, Bool (*predicate)(), XPointer arg);
+	unsigned int insets[4];
+	unsigned int scale;
+	double fps;
+	char output[4096];	
+} yukonGlobalData;
 
-
-typedef void *	(*type_glXGetProcAddressARB)	(const GLubyte *procName);
-typedef void	(*type_glXSwapBuffers)			(Display *dpy, GLXDrawable drawable);
-
+extern yukonGlobalData yukonGlobal;
 
 #endif /* __YUKON_H__ */

@@ -3,59 +3,14 @@
 if [ -z "${1}" ]; then
 	echo -e "usage: yukon APPLICATION <ARGS>\n"
 	echo -e "\tYou can use this wrapper script to run any program using the"
-	echo -e "\tyukon library. Please note that it will perform various sanity"
-	echo -e "\tchecks beforehand, which must pass. Otherwise, error messages"
-	echo -e "\twill be printed describing the problem."
-	echo -e "\nWebpage - http://www.neopsis.com/projects/yukon"
+	echo -e "\tyukon library."
+	echo -e ""
+	echo -e "Webpage - http://www.neopsis.com/projects/yukon"
 	echo -e "Version - \$Id$"
 
 	exit 1
 fi
 
 LIBDIR=${LIBDIR:-'lib'}
-USRDIR="${HOME}/.yukon/${LIBDIR}"
-SYSLIB="libGL.so libX11.so"
 
-# Make sure the user has the yukon directory
-if [ ! -d "${USRDIR}" ]; then
-	echo "Unable to find ${USRDIR}"
-	exit 2
-fi
-
-MD5Check() {
-	if which md5sum > /dev/null; then
-		local ORIG="$(md5sum /usr/${LIBDIR}/${1} | cut -f 1 -d ' ')"
-
-		if [ -r "${USRDIR}/${1}.md5" ]; then
-			local COPY="$(cat ${USRDIR}/${1}.md5)"
-
-			# Compare them!
-			if [ "${ORIG}" != "${COPY}" ]; then
-				echo "It looks like your locally installed version of ${1} and"
-				echo "the version of ${1} Yukon uses are different. More than"
-				echo "likely your distro has updated one library or the other, and"
-				echo "you should probably rebuild and reinstall Yukon."
-			fi
-		else
-			echo "This version of Yukon does not appear to have created an MD5 checksum for"
-			echo "${1} during installation. To be safe you should reinstall Yukon and"
-			echo "confirm that you have the md5sum binary installed."
-		fi
-	else
-		echo "Unable to find the md5sum binary; skipping comparisons."
-	fi
-}
-
-# Make sure all the libraries exist and have the correct checksum
-for LIB in ${SYSLIB}; do
-	USRLIB="${USRDIR}/${LIB}"
-
-	if [ ! -f "${USRLIB}" ]; then
-		echo "Unable to find library file ${USRLIB}"
-		exit 3
-	fi
-
-	MD5Check ${LIB}
-done
-
-eval "LD_LIBRARY_PATH=${USRDIR}:${LD_LIBRARY_PATH} ${*}"
+eval "LD_LIBRARY_PATH=/usr/${LIBDIR}/yukon:${LD_LIBRARY_PATH} ${*}"

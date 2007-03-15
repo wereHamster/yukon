@@ -21,7 +21,7 @@ static void parseOUTPUT(const char *str)
 static void parseFPS(const char *str)
 {
 	if (check(str))
-		sscanf(str, "%f", &yukonGlobal.fps);
+		sscanf(str, "%lf", &yukonGlobal.fps);
 }
 
 static void parseINSETS(const char *str)

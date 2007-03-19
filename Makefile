@@ -4,7 +4,7 @@ PREFIX   = /usr/local
 LIBDIR   = lib
 
 CC       = gcc
-CFLAGS   = -Iinclude -std=c99
+CFLAGS   = -Iinclude -std=c99 -O3
 
 OBJS     = src/config.o src/core.o src/hooks.o src/log.o
 NATIVE   = libX11.so libGL.so
@@ -23,7 +23,8 @@ yukon-core: $(OBJS) $(NATIVE)
 
 soname = $$(objdump -x /usr/$(LIBDIR)/$(1) | grep SONAME | awk '{ print $$2 }')
 install: yukon-core
-	install -m 755 -d $(DESTDIR)$(PREFIX)/$(LIBDIR)/yukon
+	install -m 755 -d $(DESTDIR)$(PREFIX)/bin $(DESTDIR)$(PREFIX)/$(LIBDIR)/yukon
+	install -m 755 tools/yukon $(DESTDIR)$(PREFIX)/bin
 	install -m 755 yukon-core $(DESTDIR)$(PREFIX)/$(LIBDIR)/yukon
 
 	$(foreach lib,$(NATIVE),ln -sf /usr/$(LIBDIR)/$(lib) $(DESTDIR)$(PREFIX)/$(LIBDIR)/yukon/$(lib).native;)

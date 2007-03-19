@@ -103,6 +103,7 @@ void yukonConfig(void)
 {
 	/* let's set some reasonable defaults */
 	parseOUTPUT("file:///tmp/yukon.seom");
+	parseFPS("30.0");
 	parseSCALE("0");
 	parseHOTKEY("F8");
 

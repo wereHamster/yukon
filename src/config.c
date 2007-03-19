@@ -135,6 +135,7 @@ void yukonConfig(void)
 __attribute__ ((constructor))
 static void yukonConfigInit()
 {
+	memset(&yukonGlobal, 0, sizeof(yukonGlobal));
 	yukonConfig();
 }
 

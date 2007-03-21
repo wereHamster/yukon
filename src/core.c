@@ -6,7 +6,6 @@ yukonGlobalData yukonGlobal;
 static int doCapture;
 static seomClient *client;
 
-
 void yukonEvent(Display *dpy, XEvent *event)
 {
 	static Time lastEvent;

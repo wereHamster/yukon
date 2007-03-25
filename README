@@ -26,24 +26,16 @@ will be bugs. ;)
 BUILDING
 ------------------------------------------------------------------------------
 
-Use the 'build.sh' script to compile and install yukon. The script uses two
-environment variables if they are present: 'CC' and 'LIBPATH'. Usually you
-don't need to set them, but if you have a 64bit userspace and want to
-compile yukon into a 32bit library, you need to set 'CC="gcc -m32"' and
-'LIBPATH="lib32"', so that the compiler knows to produce 32bit objects and
-where it can find the 32bit libX11.so and libGL.so.
+Yukon is a simple 'Makefile' project. Meaning that it can be built and
+installed using:
 
-Note that some distributions don't have libX11.so under /usr/lib32 (gentoo
-for example). On such systems you need to copy the 32bit libX11.so to
-/usr/lib32 or make a symlink from /usr/lib32/libX11.so to the real location.
-On gentoo that would be (as root):
+	$ make && sudo make install
 
-	$ ln -s /emul/linux/x86/usr/lib/libX11.so /usr/lib32/libX11.so
+If you want to cross-compile, set CC and LIBDIR on the make command-line.
+For example, the following command-line will correctly install the 32bit
+version of yukon in a 64bit userspace: 
 
-Once the build completes, you'll notice a new directory called .yukon has
-been created in your HOME directory. Don't worry too much about it's 
-purpose for now, it is mainly there to facilitate the libGL interception
-Yukon must implement to function properly.
+	$ make CC="gcc -m32" && sudo make install LIBDIR="lib32"
 
 
 RUNNING
@@ -51,16 +43,10 @@ RUNNING
 
 Explaining "how" yukon works can be little difficult--therefore, we've
 provided a wrapper script written in Bash that you can use to greatly
-simplify matters. Just run the "yukon" script (found here in the tools
-directory, or perhaps installed locally in your path) with your application
-and it's parameters following. For example:
+simplify matters. Just run the "yukon" script (installed into $PREFIX/bin)
+with your application and it's parameters following. For example:
 
-	$ ./tools/yukon glxgears -printfps
-
-For those interested, Yukon works by intercepting calls to glXSwapBuffers
-and, before invoking the real function, copies the color buffer and makes a
-simple image stream out of it, which you can feed to a server or write to disk
-directly.
+	$ yukon glxgears
 
 
 CONFIGURATION
@@ -70,13 +56,12 @@ You'll probably want to use the yukon.conf file in the tools directory as
 a starting point for you own configuration setups. However, the following
 briefly describes what goes on when Yukon is invoked.
 
-1. Yukon checks for the file /etc/yukon.conf
-2. Yukon checks for the file $HOME/.yukon/conf; these values
-   override the system defaults.
-3. Yukon checks for the various YUKON_* environment variables. These
-   values override anything else, and is the method I use personally. :)
-4. Lastly, Yukon will use the protocol specified by the OUTPUT configuration
-   setting to determine "what to do" with the image stream.
+1. Yukon parses configuration from /etc/yukon.conf
+2. Yukon parses configuration from $HOME/.yukon/conf
+3. Yukon parses the various YUKON_* environment variables.
+
+In each step, yukon overrides options defined before, eg. environment
+variables override everything else.
 
 While setting configuration parameters in /etc/yukon.conf or $HOME/.yukon/conf
 is fairly straightforward, using environment variables can be slightly more
@@ -84,7 +69,7 @@ tricky. Basically, each option available to Yukon can also be overridden
 using it's named prefixed with YUKON_ in a shell. For example, if you wanted
 to run glxgears and use Yukon's verbose logging, try running:
 
-	$ YUKON_VERBOSE=true ./tools/yukon glxgears
+	$ YUKON_VERBOSE=5 yukon glxgears
 
 For variables that contain spaces, enclose the correspond shell declaration
 in double quotes, i.e.:

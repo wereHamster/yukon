@@ -22,4 +22,4 @@ for DIR in ${SYSDIRS}; do
 	fi
 done
 
-eval "LD_LIBRARY_PATH="${YLDPATH}:${LD_LIBRARY_PATH} ${*}"
+eval "LD_LIBRARY_PATH=${YLDPATH}:${LD_LIBRARY_PATH} ${*}"

@@ -31,7 +31,7 @@ install: yukon-core-lib
 	install -m 755 yukon-core-lib $(DESTDIR)$(PREFIX)/$(LIBDIR)/yukon
 
 	$(foreach lib,$(LIBS),ln -sf /usr/$(LIBDIR)/$(lib) $(DESTDIR)$(PREFIX)/$(LIBDIR)/yukon/$(lib).native;)
-	$(foreach lib,$(LIBS),ln -sf yukon-core $(DESTDIR)$(PREFIX)/$(LIBDIR)/yukon/$(call soname,$(lib));)
+	$(foreach lib,$(LIBS),ln -sf yukon-core-lib $(DESTDIR)$(PREFIX)/$(LIBDIR)/yukon/$(call soname,$(lib));)
 
 clean:
 	rm -f $(OBJS) $(LIBS) yukon-core-lib sysconf

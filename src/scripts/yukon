@@ -1,0 +1,25 @@
+#!/bin/sh
+
+if [ -z "${1}" ]; then
+	echo -e "usage: yukon APPLICATION <ARGS>\n"
+	echo -e "\tYou can use this wrapper script to run any program using the"
+	echo -e "\tyukon library."
+	echo -e ""
+	echo -e "Webpage - http://www.neopsis.com/projects/yukon"
+	echo -e "Version - \$Id$"
+
+	exit 1
+fi
+
+YLDPATH="${HOME}/.yukon/lib"
+SYSDIRS="/etc/yukon/system ${HOME}/.yukon/system"
+for DIR in ${SYSDIRS}; do
+	if [ -d "${DIR}" ]; then
+		for FILE in $(ls "${DIR}"); do
+			source "${DIR}/${FILE}"
+			YLDPATH="${YLDPATH}:${LDPATH}"
+		done
+	fi
+done
+
+eval "LD_LIBRARY_PATH="${YLDPATH}:${LD_LIBRARY_PATH} ${*}"

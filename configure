@@ -1,0 +1,13 @@
+#!/bin/sh
+
+rm -f config.make
+
+for OPT do
+	if ! echo "${OPT}" | grep -qE '^--[[:lower:]]*=.+'; then
+		echo "Bad argument: ${OPT}" && exit 1
+	fi
+
+	TMP=$(echo ${OPT%=*} | tr '[:lower:]' '[:upper:]')
+	echo "${TMP#--} = ${OPT#*=}" >> config.make
+done
+

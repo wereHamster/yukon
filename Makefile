@@ -9,6 +9,8 @@ CFLAGS   = -Iinclude -std=c99 -O3
 OBJS     = src/config.o src/core.o src/hooks.o src/log.o
 LIBS     = libX11.so libGL.so
 
+include config.make
+
 .PHONY: all clean install
 all: yukon-core-lib sysconf
 
@@ -35,3 +37,6 @@ install: yukon-core-lib
 
 clean:
 	rm -f $(OBJS) $(LIBS) yukon-core-lib sysconf
+
+mrproper: clean
+	rm -f config.make

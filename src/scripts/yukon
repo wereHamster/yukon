@@ -15,8 +15,8 @@ YLDPATH="${HOME}/.yukon/lib"
 SYSDIRS="/etc/yukon/system ${HOME}/.yukon/system"
 for DIR in ${SYSDIRS}; do
 	if [ -d "${DIR}" ]; then
-		for FILE in $(ls "${DIR}"); do
-			source "${DIR}/${FILE}"
+		for FILE in ${DIR}/*; do
+			. "${FILE}"
 			YLDPATH="${YLDPATH}:${LDPATH}"
 		done
 	fi

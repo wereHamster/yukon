@@ -1,6 +1,6 @@
 #!/bin/sh
 
-rm -f config.make
+rm -f config.make && touch config.make
 
 for OPT do
 	if ! echo "${OPT}" | grep -qE '^--[[:lower:]]*=.+'; then

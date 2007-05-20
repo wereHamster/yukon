@@ -11,15 +11,15 @@ if [ -z "${1}" ]; then
 	exit 1
 fi
 
-YLDPATH="${HOME}/.yukon/lib"
+YLDPATH="${HOME}/.yukon/local"
 SYSDIRS="/etc/yukon/system ${HOME}/.yukon/system"
 for DIR in ${SYSDIRS}; do
 	if [ -d "${DIR}" ]; then
-		for FILE in ${DIR}/*; do
+		for FILE in "${DIR}"/*; do
 			. "${FILE}"
 			YLDPATH="${YLDPATH}:${LDPATH}"
 		done
 	fi
 done
 
-eval "LD_LIBRARY_PATH=${YLDPATH}:${LD_LIBRARY_PATH} ${*}"
+LD_LIBRARY_PATH="${YLDPATH}:${LD_LIBRARY_PATH}" "${@}"

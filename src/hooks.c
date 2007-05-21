@@ -97,7 +97,13 @@ int XPeekIfEvent(Display * dpy, XEvent * event, Bool(*predicate) (), XPointer ar
 static void (*pglXSwapBuffers)(Display *dpy, GLXDrawable drawable);
 void glXSwapBuffers(Display *dpy, GLXDrawable drawable)
 {
+	GLint buf;
+	glGetIntegerv(GL_READ_BUFFER, &buf);
+
+	glReadBuffer(GL_BACK);
 	yukonCapture(dpy, drawable);
+	glReadBuffer(buf);
+
 	pglXSwapBuffers(dpy, drawable);
 }
 

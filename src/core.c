@@ -6,7 +6,7 @@ yukonGlobalData yukonGlobal;
 static int doCapture;
 static seomClient *client;
 
-void yukonEvent(Display *dpy, XEvent *event)
+void yukonCoreEvent(Display *dpy, XEvent *event)
 {
 	static Time lastEvent;
 
@@ -29,7 +29,7 @@ void yukonEvent(Display *dpy, XEvent *event)
 	}
 }
 
-void yukonCapture(Display *dpy, GLXDrawable drawable)
+void yukonCoreCapture(Display *dpy, GLXDrawable drawable)
 {
 	if (client == NULL && doCapture) {
 		doCapture = 0;

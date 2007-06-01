@@ -4,9 +4,9 @@ PREFIX   = /usr/local
 LIBDIR   = lib
 
 CC       = gcc
-CFLAGS   = -Iinclude -std=c99 -O3
+CFLAGS   = -Iinclude -Wall -std=c99 -O3
 
-OBJS     = src/config.o src/core.o src/log.o
+OBJS     = src/core/conf.o src/core/glue.o src/core/log.o
 LIBS     = libX11.so libGL.so
 
 include config.make

@@ -2,7 +2,7 @@
 #include <yukon.h>
 
 static const char *prefix[] = {
-	"DEBUG", "INFO ", "WARN ", "ERROR", "PANIC", "?????"
+	"PANIC", "ERROR", "WARN ", "INFO ", "DEBUG"
 };
 
 static const char *timestamp(void)

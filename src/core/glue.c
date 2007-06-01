@@ -35,7 +35,7 @@ void yukonCoreCapture(Display *dpy, GLXDrawable drawable)
 		doCapture = 0;
 
 		/* reload configuration in case it changed */
-		yukonConfig();
+		updateConfiguration();
 
 		Window root;
 		unsigned int width, height, unused;

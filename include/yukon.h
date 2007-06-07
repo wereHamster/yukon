@@ -3,6 +3,7 @@
 #define __YUKON_H__
 
 #include <stdarg.h>
+#include <linux/limits.h>
 
 #include <seom/seom.h>
 
@@ -26,7 +27,7 @@ typedef struct {
 	unsigned int insets[4];
 	unsigned int scale;
 	double fps;
-	char output[4096];	
+	char output[PATH_MAX];	
 } yukonGlobalData;
 
 extern yukonGlobalData yukonGlobal;

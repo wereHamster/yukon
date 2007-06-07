@@ -100,9 +100,22 @@ void updateConfiguration(void)
 	parseFPS("30.0");
 	parseVERBOSE("1");
 
+	/* now get the settings from configuration files */
 	merge("/etc/yukon.conf");
 	merge("%s/.yukon/conf", getenv("HOME"));
 	merge("%s/.yukon/profiles/%s/conf", getenv("HOME"), executableName);
+
+	/* for file:// URIs that end with a slash we generate a filename based
+	 * on the executable name and date/time: "[exe]-[date]-[time].seom" */
+	if (strncmp(yukonGlobal.output, "file://", 7) == 0) {
+		size_t len = strlen(yukonGlobal.output);
+		if (yukonGlobal.output[len - 1] == '/' && PATH_MAX - len > strlen(executableName) + 1 + 20 + 1 + 5) {
+			time_t t = time(NULL);
+			len += snprintf(yukonGlobal.output + len, PATH_MAX - len, "%s", executableName);
+			len += strftime(yukonGlobal.output + len, PATH_MAX - len, "-%F-%T", localtime(&t));
+			snprintf(yukonGlobal.output + len, PATH_MAX - len, ".seom");
+		}
+	}
 
 	logMessage(3, "Active configuration (log-level: %u):\n", yukonGlobal.logLevel);
 	logMessage(3, "   HOTKEY: %s, FPS: %.1f, INSETS: %u/%u/%u/%u\n", XKeysymToString(yukonGlobal.hotkey), yukonGlobal.fps, yukonGlobal.insets[0], yukonGlobal.insets[1], yukonGlobal.insets[2], yukonGlobal.insets[3]);

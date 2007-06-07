@@ -11,7 +11,7 @@ static const char *timestamp(void)
 	struct tm *tm = localtime(&t);
 
 	static char buffer[64];
-	strftime(buffer, sizeof(buffer), "%d/%m/%Y %H:%M:%S", tm);
+	strftime(buffer, sizeof(buffer), "%Y/%m/%d %H:%M:%S", tm);
 
 	return buffer;
 }

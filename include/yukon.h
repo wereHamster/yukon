@@ -13,10 +13,11 @@
 #include <GL/glext.h>
 #include <GL/glx.h>
 
-void yukonCapture(Display *dpy, GLXDrawable drawable);
-void yukonConfig(void);
-void yukonEvent(Display *dpy, XEvent *event);
-void yukonLog(unsigned long logLevel, const char *fmt, ...);
+void logMessage(unsigned long level, const char *fmt, ...);
+void updateConfiguration(void);
+
+void yukonCoreCapture(Display *dpy, GLXDrawable drawable);
+void yukonCoreEvent(Display *dpy, XEvent *event);
 
 typedef struct {
 	unsigned long logLevel;

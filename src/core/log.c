@@ -15,8 +15,8 @@ static const char *timestamp(void)
 
 	return buffer;
 }
- 
-void yukonLog(unsigned long level, const char *fmt, ...)
+
+void logMessage(unsigned long level, const char *fmt, ...)
 {
 	if (level > yukonGlobal.logLevel)
 		return;

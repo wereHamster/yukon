@@ -59,7 +59,7 @@ static void merge(const char *fmt, ...)
 	vsnprintf(buffer, sizeof(buffer), fmt, args);
 	va_end(args);
 
-	yukonLog(4, "Merging configuration from '%s'\n", buffer);
+	logMessage(4, "Merging configuration from '%s'\n", buffer);
 
 	FILE *config = fopen(buffer, "r");
 	if (!config)
@@ -98,14 +98,15 @@ void updateConfiguration(void)
 	parseOUTPUT("file:///tmp/yukon.seom");
 	parseHOTKEY("F8");
 	parseFPS("30.0");
+	parseVERBOSE("1");
 
 	merge("/etc/yukon.conf");
 	merge("%s/.yukon/conf", getenv("HOME"));
 	merge("%s/.yukon/profiles/%s/conf", getenv("HOME"), executableName);
 
-	yukonLog(3, "Active configuration (log-level: %u):\n", yukonGlobal.logLevel);
-	yukonLog(3, "   HOTKEY: %s, FPS: %.1f, INSETS: %u/%u/%u/%u\n", XKeysymToString(yukonGlobal.hotkey), yukonGlobal.fps, yukonGlobal.insets[0], yukonGlobal.insets[1], yukonGlobal.insets[2], yukonGlobal.insets[3]);
-	yukonLog(3, "   OUTPUT: %s, SCALE: %u\n", yukonGlobal.output, yukonGlobal.scale);
+	logMessage(3, "Active configuration (log-level: %u):\n", yukonGlobal.logLevel);
+	logMessage(3, "   HOTKEY: %s, FPS: %.1f, INSETS: %u/%u/%u/%u\n", XKeysymToString(yukonGlobal.hotkey), yukonGlobal.fps, yukonGlobal.insets[0], yukonGlobal.insets[1], yukonGlobal.insets[2], yukonGlobal.insets[3]);
+	logMessage(3, "   OUTPUT: %s, SCALE: %u\n", yukonGlobal.output, yukonGlobal.scale);
 }
 
 static void __attribute__((constructor)) setup(void)

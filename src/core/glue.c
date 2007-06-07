@@ -42,7 +42,7 @@ void yukonCoreCapture(Display *dpy, GLXDrawable drawable)
 		XGetGeometry(dpy, drawable, &root, (int *)&unused, (int *)&unused, &width, &height, &unused, &unused);
 
 		if (yukonGlobal.insets[0] + yukonGlobal.insets[2] > height || yukonGlobal.insets[1] + yukonGlobal.insets[3] > width) {
-			yukonLog(2, "%s(): insets too big, fix it!\n", __func__);
+			logMessage(2, "%s(): insets too big, fix it!\n", __func__);
 			return;
 		}
 
@@ -55,7 +55,7 @@ void yukonCoreCapture(Display *dpy, GLXDrawable drawable)
 
 		client = seomClientCreate(&config);
 		if (client == NULL)
-			yukonLog(1, "%s(): couldn't create seom client\n", __func__);
+			logMessage(1, "%s(): couldn't create seom client\n", __func__);
 	}
 
 	if (client)

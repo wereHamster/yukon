@@ -20,7 +20,10 @@ void yukonCoreEvent(Display *dpy, XEvent *event)
 			doCapture = !client;
 			if (client) {
 				seomClientDestroy(client);
+				logMessage(3, "Yukon stopped capturing\n");
 				client = NULL;
+			} else {
+				logMessage(3, "Yukon is starting to capture\n");
 			}
 		}
 		break;

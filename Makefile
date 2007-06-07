@@ -18,9 +18,9 @@ all: $(LIBS) yukon-core-lib sysconf
 	$(CC) $(CFLAGS) -fPIC -c -o $@ $<
 
 $(LIBS):
-	$(CC) -shared -o libNative.so -Wl,-soname,$@.native
-	$(CC) $(CFLAGS) -fPIC -shared -o $@ src/libs/$(@:%.so=%.c) libNative.so
-	rm -f libNative.so
+	$(CC) -shared -o $@.native -Wl,-soname,$@.native
+	$(CC) $(CFLAGS) -fPIC -shared -o $@ src/libs/$(@:%.so=%.c) $@.native
+	rm -f $@.native
 
 yukon-core-lib: $(OBJS)
 	$(CC) -shared -o $@ $(OBJS) -lseom

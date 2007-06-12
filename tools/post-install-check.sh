@@ -27,3 +27,5 @@ if [ -n "${RET}" ]; then
 fi
 
 echo "Yukon seems installed correctly!"
+echo "  Note that this script doesn't check the runtime. Applications may still"
+echo "fail to work with yukon due to various reasons (bugs etc.)."

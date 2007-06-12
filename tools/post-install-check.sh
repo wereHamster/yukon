@@ -12,9 +12,15 @@ if ! which yukon 1>/dev/null 2>&1; then
 fi
 
 # Does the yukon script set the correct LD_LIBRARY_PATH ?
-RET=`yukon ldd ${GLXGEARS} | grep yukon/libGL.so.native`
+RET=`yukon printenv | grep LD_LIBRARY_PATH | grep yukon:`
 if [ -z "${RET}" ]; then
 	echo -e "The yukon script doesn't work correctly.\n - Copy sysconf to /etc/yukon/system or \$HOME/.yukon/system" && exit 1
+fi
+
+# Does the application pick up the modified libraries ?
+RET=`yukon ldd ${GLXGEARS} | grep yukon/libGL.so.native`
+if [ -z "${RET}" ]; then
+	echo -e "glxgears doesn't use the modified libraries.\n - This won't happen unless you edit the sysconf file by hand or delete the modified libraries" && exit 1
 fi
 
 # Extract the path where the yukon libraries are installed in
@@ -23,7 +29,7 @@ YPATH=`echo ${RET} | sed -e 's#.*\s/\(.*\)/libGL.so.native.*#/\1#'`
 # Check whether yukon-core-lib finds libseom.so.?
 RET=`yukon ldd "${YPATH}/yukon-core-lib" | grep -E libseom.so.? | grep "not found"`
 if [ -n "${RET}" ]; then
-	echo -e "libseom.so.? not found.\n - Make sure this library is installed and the linker can find it." && exit 1
+	echo -e "libseom.so.? not found.\n - Make sure this library is installed and the linker can find it" && exit 1
 fi
 
 echo "Yukon seems installed correctly!"

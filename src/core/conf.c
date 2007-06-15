@@ -101,9 +101,14 @@ void updateConfiguration(void)
 	parseVERBOSE("1");
 
 	/* now get the settings from configuration files */
-	merge("/etc/yukon.conf");
+	merge("/etc/yukon/conf");
 	merge("%s/.yukon/conf", getenv("HOME"));
-	merge("%s/.yukon/profiles/%s/conf", getenv("HOME"), executableName);
+	merge("%s/.yukon/programs/%s", getenv("HOME"), executableName);
+
+	/* the YUKON environment variable specifies which profile we need to load */
+	const char *profile = getenv("YUKON");
+	if (profile)
+		merge("%s/.yukon/profiles/%s", getenv("HOME"), profile);
 
 	/* for file:// URIs that end with a slash we generate a filename based
 	 * on the executable name and date/time: "[exe]-[date]-[time].seom" */

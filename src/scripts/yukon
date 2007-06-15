@@ -1,7 +1,10 @@
 #!/bin/sh
 
+PROFILE="default"
+case "${1}" in --profile=*) PROFILE="${1#*=}"; shift;; esac
+
 if [ -z "${1}" ]; then
-	echo -e "usage: yukon APPLICATION <ARGS>\n"
+	echo -e "usage: yukon [--profile=PROFILE] APPLICATION <ARGS>\n"
 	echo -e "\tYou can use this wrapper script to run any program using the"
 	echo -e "\tyukon library."
 	echo -e ""
@@ -22,4 +25,4 @@ for DIR in ${SYSDIRS}; do
 	fi
 done
 
-LD_LIBRARY_PATH="${YLDPATH}:${LD_LIBRARY_PATH}" "${@}"
+LD_LIBRARY_PATH="${YLDPATH}:${LD_LIBRARY_PATH}" YUKON="${PROFILE}" "${@}"

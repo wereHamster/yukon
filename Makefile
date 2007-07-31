@@ -9,7 +9,7 @@ CFLAGS   = -Iinclude -Wall -std=c99 -O3
 OBJS     = src/core/conf.o src/core/glue.o src/core/log.o
 LIBS     = libX11.so libGL.so
 
-include config.make
+-include config.make
 
 .PHONY: all clean install
 all: $(LIBS) yukon-core-lib sysconf

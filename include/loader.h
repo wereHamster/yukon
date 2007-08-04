@@ -14,6 +14,7 @@
 #define glue(name, ...) ({ \
 	if (__builtin_expect(core == NULL, 0)) { \
 		void *handle = dlopen("yukon-core-lib", RTLD_LAZY); \
+		dlerror(); \
 		if (handle) \
 			core = (__typeof__(core)) dlsym(handle, name); \
 	} (*core)(__VA_ARGS__); }) \

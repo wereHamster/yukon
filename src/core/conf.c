@@ -2,6 +2,7 @@
 #include <yukon.h>
 
 static char executableName[4096];
+yukonGlobalData yukonGlobal;
 
 #define parse(str, key, val) \
 do { \
@@ -22,11 +23,6 @@ static void parseOUTPUT(const char *str)
 static void parseFPS(const char *str)
 {
 	sscanf(str, "%lf", &yukonGlobal.fps);
-}
-
-static void parseINSETS(const char *str)
-{
-	sscanf(str, "%u %u %u %u", &yukonGlobal.insets[0], &yukonGlobal.insets[1], &yukonGlobal.insets[2], &yukonGlobal.insets[3]);
 }
 
 static void parseSCALE(const char *str)
@@ -80,7 +76,6 @@ static void merge(const char *fmt, ...)
 
 			parse(option, OUTPUT, pos);
 			parse(option, FPS, pos);
-			parse(option, INSETS, pos);
 			parse(option, SCALE, pos);
 			parse(option, HOTKEY, pos);
 			parse(option, VERBOSE, pos);
@@ -123,9 +118,10 @@ void updateConfiguration(void)
 	}
 
 	logMessage(3, "Active configuration (log-level: %u):\n", yukonGlobal.logLevel);
-	logMessage(3, "   HOTKEY: %s, FPS: %.1f, INSETS: %u/%u/%u/%u\n", XKeysymToString(yukonGlobal.hotkey), yukonGlobal.fps, yukonGlobal.insets[0], yukonGlobal.insets[1], yukonGlobal.insets[2], yukonGlobal.insets[3]);
-	logMessage(3, "   OUTPUT: %s, SCALE: %u\n", yukonGlobal.output, yukonGlobal.scale);
+	logMessage(3, "   HOTKEY: %s, FPS: %.1f, SCALE: %u\n", XKeysymToString(yukonGlobal.hotkey), yukonGlobal.fps, yukonGlobal.scale);
+	logMessage(3, "   OUTPUT: %s\n", yukonGlobal.output);
 }
+
 
 static void __attribute__((constructor)) setup(void)
 {

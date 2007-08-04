@@ -79,14 +79,16 @@ void *audioThreadCallback(void *data)
 	struct pollfd ufds[count];
 
 	snd_pcm_poll_descriptors(pcm, ufds, count);
-	snd_pcm_start(pcm);
 
 	for (;;) {
+		if (snd_pcm_state(pcm) == SND_PCM_STATE_PREPARED)
+			snd_pcm_start(pcm);
+
 		int err = xrun(pcm, wait(pcm, ufds, count));
 		if (err < 0)
 			continue;
 
-		struct yukonPacket *packet = yukonPacketCreate(0x02, period * 8);
+		struct yukonPacket *packet = yukonPacketCreate(0x02, snd_pcm_frames_to_bytes(pcm, period));
 		if (packet == NULL)
 			continue;
 

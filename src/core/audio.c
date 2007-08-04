@@ -2,9 +2,7 @@
 #include <alsa/asoundlib.h>
 #include <yukon.h>
 
-static snd_pcm_t *pcm;
-static snd_pcm_uframes_t periodSize = 4096;
-static snd_output_t *output= NULL;
+#define PERIOD 4096
 
 static int xrun_recovery(snd_pcm_t *handle, int err)
 {
@@ -26,46 +24,36 @@ static int xrun_recovery(snd_pcm_t *handle, int err)
 	return err;
 }
 
-void setupAudio(void)
-{
-	snd_pcm_open(&pcm, "default", SND_PCM_STREAM_CAPTURE, 0);
-
-	snd_output_stdio_attach(&output, stdout, 0);
-
-	if (snd_pcm_set_params(pcm, SND_PCM_FORMAT_S32_LE, SND_PCM_ACCESS_RW_INTERLEAVED, 2, 48000, 0, 500000) < 0) {
-		fprintf (stderr, "snd_pcm_set_params() failed.\n");
-		exit (-1);
-	}
-
-	snd_pcm_dump(pcm, output);
-	xrun_recovery(pcm, snd_pcm_start(pcm));
-}
-
-void stopAudio(void)
-{
-	snd_pcm_close(pcm);
-}
-
 void *audioThreadCallback(void *data)
 {
-	struct buffer *buffer = data;
+	struct yukonEngine *engine = data;
+
+	snd_pcm_t *pcm = NULL;
+	snd_pcm_open(&pcm, "default", SND_PCM_STREAM_CAPTURE, 0);
+	if (snd_pcm_set_params(pcm, SND_PCM_FORMAT_S32_LE, SND_PCM_ACCESS_RW_INTERLEAVED, 2, 48000, 0, 500000) < 0) {
+		logMessage(3, "Failed to open or configure alsa device\n");
+		return NULL;
+	}
 
 	for (;;) {
-		if (bufferCount(buffer) > 0)
-			break;
-
-		struct packet *packet = packetCreate(0x02, periodSize * 8);
+		struct yukonPacket *packet = yukonPacketCreate(0x02, PERIOD * 8);
 		if (packet == NULL)
 			continue;
-		
-		snd_pcm_sframes_t ret = snd_pcm_readi(pcm, packetPayload(packet), periodSize);
+
+		snd_pcm_sframes_t delay;
+		snd_pcm_delay(pcm, &delay);
+		packet->time -= 1000000 / 48000 * delay;
+
+		snd_pcm_sframes_t ret = snd_pcm_readi(pcm, yukonPacketPayload(packet), PERIOD);
 		if (ret < 0) {
-			logMessage(4, "xrun!!!\n");
+			logMessage(3, "overrun!\n");
 			ret = xrun_recovery(pcm, ret);
 		}
 		
-		multiplexerPut(packet);
+		yukonStreamPut(engine->stream, packet);
 	}
+
+	snd_pcm_close(pcm);
 
 	return NULL;
 }

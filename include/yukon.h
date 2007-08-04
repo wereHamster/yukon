@@ -26,6 +26,8 @@
 #include <GL/glext.h>
 #include <GL/glx.h>
 
+#include <stream.h>
+
 void logMessage(unsigned long level, const char *fmt, ...);
 void updateConfiguration(void);
 
@@ -40,50 +42,26 @@ typedef struct {
 
 extern yukonGlobalData yukonGlobal;
 
-struct packet {
-	uint8_t type;
-	uint64_t time;
-	uint64_t size;
+struct yukonEngine {
+	struct yukonStream *stream;
+	unsigned long size[2];
+	pthread_t audioThread;
 };
 
-struct buffer {
-	pthread_mutex_t mutex;
-	pthread_cond_t cond;
-
-	unsigned long size, head, tail;
-	struct packet *array[0];
-};
+struct yukonEngine *yukonEngineCreate(const char *spec, unsigned long scale, unsigned long size[2]);
+void yukonEngineCapture(struct yukonEngine *engine);
+struct yukonEngine *yukonEngineDestroy(struct yukonEngine *engine);
 
 unsigned long coreRunning(void);
 void coreStop(void);
 void captureVideo(void);
 void setupEngine(Display *dpy, GLXDrawable drawable);
 
-void multiplexerPut(struct packet *packet);
-void copyFrame(void *dst[3], struct packet *packet);
-void *streamThreadCallback(void *data);
 void *audioThreadCallback(void *data);
 
 void setupAudio(void);
 void stopAudio(void);
-
-void streamPutVideo(struct packet *packet);
-void streamPutAudio(struct packet *packet);
 			
 void readFramebuffer(unsigned int width, unsigned int height, void *data);
-
-void frameResample(void *buf, unsigned long w, unsigned long h);
-void frameConvert(void *dst[3], void *src, unsigned long w, unsigned long h);
-
-struct packet *packetCreate(unsigned char type, unsigned long size);
-void *packetPayload(struct packet *packet);
-void packetDestroy(struct packet *packet);
-
-struct buffer *bufferCreate(unsigned long size);
-void bufferPut(struct buffer *buffer, struct packet *packet);
-struct packet *bufferGet(struct buffer *buffer);
-unsigned long bufferCount(struct buffer *buffer);
-void bufferDestroy(struct buffer *buffer);
-
 
 #endif /* __YUKON_H__ */

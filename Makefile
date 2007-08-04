@@ -3,18 +3,20 @@ DESTDIR  =
 PREFIX   = /usr/local
 LIBDIR   = lib
 
+ARCH     = C
+
 CC       = gcc
 CFLAGS   = -Iinclude -Wall -std=c99 -O3
 
-OBJS     = src/core/conf.o src/core/core.o src/core/log.o src/core/stream.o \
-		   src/core/threads.o src/core/video.o src/core/packet.o src/core/buffer.o \
-		   src/glue/glue.o src/core/audio.o
+OBJS     = src/core/conf.o src/core/log.o src/stream/stream.o src/core/engine.o \
+		   src/core/opengl.o src/stream/packet.o src/stream/buffer.o \
+		   src/glue/glue.o src/core/audio.o src/stream/arch/$(ARCH)/frame.o 
 LIBS     = libX11.so libGL.so
 
 -include config.make
 
 .PHONY: all clean install
-all: $(LIBS) yukon-core-lib player sysconf
+all: $(LIBS) yukon-core-lib filter sysconf
 
 %.o: %.c
 	$(CC) $(CFLAGS) -fPIC -c -o $@ $<
@@ -27,8 +29,8 @@ $(LIBS):
 yukon-core-lib: $(OBJS)
 	$(CC) -shared -o $@ $(OBJS) -lasound
 	
-player:
-	$(CC) $(CFLAGS) -o $@ src/player/player.c -lasound
+filter: src/filter/main.c
+	$(CC) $(CFLAGS) -o $@ $< -lasound
 
 sysconf:
 	echo 'LDPATH="$(PREFIX)/$(LIBDIR)/yukon"' > $@
@@ -43,7 +45,7 @@ install: $(LIBS) yukon-core-lib
 	$(foreach lib,$(LIBS),install -m 755 $(lib) $(DESTDIR)$(PREFIX)/$(LIBDIR)/yukon/$(call soname,$(lib));)
 
 clean:
-	rm -f $(OBJS) $(LIBS) player yukon-core-lib sysconf
+	rm -f $(OBJS) $(LIBS) filter yukon-core-lib sysconf
 
 mrproper: clean
 	rm -f config.make

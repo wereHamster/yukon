@@ -1,6 +1,7 @@
 
 #include <yukon.h>
 
+static struct yukonEngine *engine;
 static int hotkeyPressed;
 
 void glueEvent(Display *dpy, XEvent *event)
@@ -13,10 +14,12 @@ void glueEvent(Display *dpy, XEvent *event)
 			if (event->xkey.time == lastEvent)
 				return;
 
+			logMessage(4, "Hotkey pressed\n");
+
 			lastEvent = event->xkey.time;
-			hotkeyPressed = 1;
-			if (coreRunning())
-				coreStop();
+			hotkeyPressed = !engine;
+			if (engine)
+				engine = yukonEngineDestroy(engine);
 		}
 		break;
 	default:
@@ -26,16 +29,28 @@ void glueEvent(Display *dpy, XEvent *event)
 
 void glueDrawable(Display *dpy, GLXDrawable drawable)
 {
-	if (hotkeyPressed && !coreRunning()) {
+	if (hotkeyPressed && engine == NULL) {
 		hotkeyPressed = 0;
 
 		/* reload configuration in case it changed */
 		updateConfiguration();
 
-		/* set up threads etc */
-		setupEngine(dpy, drawable);
+		Window root;
+		unsigned int width, height, unused;
+		XGetGeometry(dpy, drawable, &root, (int *)&unused, (int *)&unused, &width, &height, &unused, &unused);
+
+		unsigned long size[2] = { width, height };
+
+		/* create the main engine */
+		engine = yukonEngineCreate(yukonGlobal.output, yukonGlobal.scale, size);
+
+		if (engine) {
+			logMessage(4, "Yukon engine is active now\n");
+		} else {
+			logMessage(4, "Failed to create the yukon engine\n");
+		}
 	}
 
-	if (coreRunning())
-		captureVideo();
+	if (engine)
+		yukonEngineCapture(engine);
 }

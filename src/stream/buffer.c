@@ -1,14 +1,14 @@
 
-#include <yukon.h>
+#include <stream.h>
 
-static unsigned long num(struct buffer *buffer)
+static unsigned long num(struct yukonBuffer *buffer)
 {
 	return ((buffer->head - buffer->tail) + buffer->size) % buffer->size;
 }
 
-struct buffer *bufferCreate(unsigned long size)
+struct yukonBuffer *yukonBufferCreate(unsigned long size)
 {
-	struct buffer *buffer = malloc(sizeof(struct buffer) + size * sizeof(struct packet *));
+	struct yukonBuffer *buffer = malloc(sizeof(struct yukonBuffer) + size * sizeof(struct yukonPacket *));
 	if (buffer == NULL)
 		return NULL;
 
@@ -21,7 +21,7 @@ struct buffer *bufferCreate(unsigned long size)
 	return buffer;
 }
 
-void bufferPut(struct buffer *buffer, struct packet *packet)
+void yukonBufferPut(struct yukonBuffer *buffer, struct yukonPacket *packet)
 {
 
 	pthread_mutex_lock(&buffer->mutex);
@@ -35,9 +35,9 @@ void bufferPut(struct buffer *buffer, struct packet *packet)
 	pthread_cond_broadcast(&buffer->cond);
 }
 
-struct packet *bufferGet(struct buffer *buffer)
+struct yukonPacket *yukonBufferGet(struct yukonBuffer *buffer)
 {
-	struct packet *packet = NULL;
+	struct yukonPacket *packet = NULL;
 
 	pthread_mutex_lock(&buffer->mutex);
 	while (num(buffer) == 0)
@@ -52,7 +52,7 @@ struct packet *bufferGet(struct buffer *buffer)
 	return packet;
 }
 
-unsigned long bufferCount(struct buffer *buffer)
+unsigned long yukonBufferCount(struct yukonBuffer *buffer)
 {
 	unsigned long ret;
 
@@ -63,7 +63,7 @@ unsigned long bufferCount(struct buffer *buffer)
 	return ret;
 }
 
-void bufferDestroy(struct buffer *buffer)
+void yukonBufferDestroy(struct yukonBuffer *buffer)
 {
 	pthread_mutex_destroy(&buffer->mutex);
 	pthread_cond_destroy(&buffer->cond);

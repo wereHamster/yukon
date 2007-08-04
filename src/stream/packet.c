@@ -1,5 +1,5 @@
 
-#include <yukon.h>
+#include <stream.h>
 #include <sys/time.h>
 
 static uint64_t getTime()
@@ -9,9 +9,9 @@ static uint64_t getTime()
 	return tv.tv_sec * 1000000 + tv.tv_usec;
 }
 
-struct packet *packetCreate(unsigned char type, unsigned long size)
+struct yukonPacket *yukonPacketCreate(unsigned char type, unsigned long size)
 {
-	struct packet *packet = malloc(sizeof(struct packet) + size);
+	struct yukonPacket *packet = malloc(sizeof(struct yukonPacket) + size);
 	if (packet == NULL)
 		return NULL;
 
@@ -22,12 +22,12 @@ struct packet *packetCreate(unsigned char type, unsigned long size)
 	return packet;
 }
 
-void *packetPayload(struct packet *packet)
+void *yukonPacketPayload(struct yukonPacket *packet)
 {
 	return (void *) (packet + 1);
 }
 
-void packetDestroy(struct packet *packet)
+void yukonPacketDestroy(struct yukonPacket *packet)
 {
 	free(packet);
 }

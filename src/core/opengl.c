@@ -8,7 +8,7 @@
 	if (__builtin_expect(func != NULL, 1)) \
 		(*func)(__VA_ARGS__); \
  	
-static void (*getProcAddress(const GLubyte *procName))(void)
+void (*glXGetProcAddressARB(const GLubyte *procName))(void)
 {
 	static __typeof__(&glXGetProcAddressARB) func;
 	if (__builtin_expect(func == NULL, 0)) {

@@ -6,6 +6,8 @@ LIBDIR   = lib
 ARCH     = C
 
 CC       = gcc
+ASM      = yasm
+
 CFLAGS   = -Iinclude -Wall -std=c99 -O3
 
 OBJS     = src/core/conf.o src/core/log.o src/stream/stream.o src/core/engine.o \
@@ -18,9 +20,12 @@ LIBS     = libX11.so libGL.so
 .PHONY: all clean install
 all: $(LIBS) yukon-core-lib filter sysconf
 
+%.o: %.asm
+	$(ASM) -m $(ARCH) -f elf -o $@ $<
+
 %.o: %.c
 	$(CC) $(CFLAGS) -fPIC -c -o $@ $<
-
+	
 $(LIBS):
 	$(CC) -shared -o $@.native -Wl,-soname,$@.native
 	$(CC) $(CFLAGS) -fPIC -shared -o $@ src/libs/$(@:%.so=%.c) $@.native

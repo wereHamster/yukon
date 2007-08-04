@@ -4,7 +4,7 @@
 #define call(funcName, ...) \
 	static __typeof__(&funcName) func; \
 	if (__builtin_expect(func == NULL, 0)) \
-		func = (__typeof__(func)) getProcAddress((const GLubyte *) #funcName); \
+		func = (__typeof__(func)) glXGetProcAddressARB((const GLubyte *) #funcName); \
 	if (__builtin_expect(func != NULL, 1)) \
 		(*func)(__VA_ARGS__); \
  	

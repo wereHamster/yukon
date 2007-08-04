@@ -37,6 +37,9 @@ yukon-core-lib: $(OBJS)
 filter: src/filter/main.c
 	$(CC) $(CFLAGS) -o $@ $< -lasound
 
+stat: src/tools/stat.c
+	$(CC) $(CFLAGS) -o $@ $<
+
 sysconf:
 	echo 'LDPATH="$(PREFIX)/$(LIBDIR)/yukon"' > $@
 

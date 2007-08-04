@@ -52,16 +52,6 @@ struct yukonEngine *yukonEngineCreate(const char *spec, unsigned long scale, uns
 void yukonEngineCapture(struct yukonEngine *engine);
 struct yukonEngine *yukonEngineDestroy(struct yukonEngine *engine);
 
-unsigned long coreRunning(void);
-void coreStop(void);
-void captureVideo(void);
-void setupEngine(Display *dpy, GLXDrawable drawable);
-
 void *audioThreadCallback(void *data);
-
-void setupAudio(void);
-void stopAudio(void);
-			
-void readFramebuffer(unsigned int width, unsigned int height, void *data);
 
 #endif /* __YUKON_H__ */

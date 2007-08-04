@@ -30,10 +30,24 @@ struct yukonEngine *yukonEngineCreate(const char *spec, unsigned long scale, uns
 	return engine;
 }
 
+#include <sys/time.h>
+
+static uint64_t getTime()
+{
+	struct timeval tv;
+	gettimeofday(&tv, 0);
+	return tv.tv_sec * 1000000 + tv.tv_usec;
+}
+
 void yukonEngineCapture(struct yukonEngine *engine)
 {
-	if (yukonStreamStatus(engine->stream) > 12)
+	uint64_t now = getTime();
+	static uint64_t lastCapture;
+
+	if (now - lastCapture < 1000000 / yukonGlobal.fps || yukonStreamStatus(engine->stream) > 12)
 		return;
+
+	lastCapture = now;
 
 	struct yukonPacket *packet = yukonPacketCreate(0x01, engine->size[0] * engine->size[1] * 4);
 	if (packet == NULL)

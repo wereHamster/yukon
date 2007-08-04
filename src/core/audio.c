@@ -4,22 +4,17 @@
 
 static int xrun(snd_pcm_t *handle, int err)
 {
-	if (err == -EPIPE) { /* under-run */
-		err = snd_pcm_prepare(handle);
-		if (err < 0)
-			printf("Can't recovery from underrun, prepare failed: %s\n", snd_strerror(err));
-		return 0;
+	if (err == -EPIPE) { /* xrun */
+		return snd_pcm_prepare(handle);
 	} else if (err == -ESTRPIPE) {
 		while ((err = snd_pcm_resume(handle)) == -EAGAIN)
 			sleep(1); /* wait until the suspend flag is released */
-		if (err < 0) {
-			err = snd_pcm_prepare(handle);
-			if (err < 0)
-				printf("Can't recovery from suspend, prepare failed: %s\n", snd_strerror(err));
-		}
+		if (err < 0)
+			return snd_pcm_prepare(handle);
 		return 0;
+	} else {
+		return err;
 	}
-	return err;
 }
 
 snd_pcm_t *openAudioDevice(const char *device, snd_pcm_uframes_t *period)
@@ -100,8 +95,10 @@ void *audioThreadCallback(void *data)
 		packet->time -= 1000000 / 48000 * delay;
 
 		snd_pcm_sframes_t ret = snd_pcm_readi(pcm, yukonPacketPayload(packet), period);
-		if (ret < 0)
+		if (ret < 0) {
+			logMessage(2, "overrun!\n");
 			ret = xrun(pcm, ret);
+		}
 		
 		yukonStreamPut(engine->stream, packet);
 	}

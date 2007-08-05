@@ -24,6 +24,7 @@ snd_pcm_hw_params_t *getParams(snd_pcm_t *pcm)
 	snd_pcm_hw_params_malloc(&params);
 	snd_pcm_hw_params_any(pcm, params);
 
+	logMessage(3, "params: access\n");
 	if (snd_pcm_hw_params_set_access(pcm, params, SND_PCM_ACCESS_RW_INTERLEAVED) < 0)
 		goto failed;
 
@@ -33,18 +34,23 @@ snd_pcm_hw_params_t *getParams(snd_pcm_t *pcm)
 	snd_pcm_format_mask_set(formats, SND_PCM_FORMAT_S24_LE);
 	snd_pcm_format_mask_set(formats, SND_PCM_FORMAT_S32_LE);
 
+	logMessage(3, "params: format\n");
 	if (snd_pcm_hw_params_set_format_mask(pcm, params, formats) < 0)
 		goto failed;
+	logMessage(3, "params: channels\n");
 	if (snd_pcm_hw_params_set_channels(pcm, params, 2) < 0)
 		goto failed;
+	logMessage(3, "params: rate\n");
 	if (snd_pcm_hw_params_set_rate(pcm, params, 48000, 0) < 0)
 		goto failed;
 
 	snd_pcm_uframes_t size;
 	if (snd_pcm_hw_params_get_buffer_size_max(params, &size) < 0)
 		goto failed;
+	logMessage(3, "params: buffer size\n");
 	if (snd_pcm_hw_params_set_buffer_size(pcm, params, size) < 0)
 		goto failed;
+	logMessage(3, "params: periods\n");
 	if (snd_pcm_hw_params_set_periods(pcm, params, 2, 1) < 0)
 		goto failed;
 

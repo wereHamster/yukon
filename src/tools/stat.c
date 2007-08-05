@@ -57,6 +57,17 @@ int main(int argc, char *argv[])
 		if (tstamp[packet.type][0] == 0)
 			tstamp[packet.type][0] = packet.time;
 		tstamp[packet.type][1] = packet.time;
+
+		static struct yukonPacket start;
+		static struct yukonPacket old;
+		if (packet.type == 0x00) {
+			start = packet;
+		} else if (packet.type == 0x01) {
+			if (packet.time - old.time > 100000)
+				fprintf(stderr, "packet diff %llu at %llu (%s)\n", packet.time - old.time, type[packet.type], timeFormat(packet.time - start.time));
+			old = packet;
+		}
+			
 	}
 
 	printf(" == Statistics:\n");

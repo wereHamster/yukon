@@ -34,8 +34,8 @@ $(LIBS):
 yukon-core-lib: $(OBJS)
 	$(CC) -shared -o $@ $(OBJS) -lasound
 	
-filter: src/filter/main.c
-	$(CC) $(CFLAGS) -o $@ $< -lasound
+filter: src/filter/main.c src/filter/wav.c src/filter/y4m.c
+	$(CC) $(CFLAGS) -o $@ src/filter/main.c src/filter/wav.c src/filter/y4m.c -lasound
 
 stat: src/tools/stat.c
 	$(CC) $(CFLAGS) -o $@ $<

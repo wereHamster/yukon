@@ -1,39 +1,26 @@
+
 #include <yukon.h>
 
 static uint32_t streamHeader[3];
 static struct yukonPacket packet;
 static char buffer[2500 * 2500* 4];
 
+void y4mWriteHeader(int fd, unsigned int width, unsigned int height, unsigned int fps);
+void y4mWriteData(int fd, struct yukonPacket *packet, void *data, unsigned int size);
+
+void wavWriteHeader(int fd, unsigned int format, unsigned int rate);
+void wavWriteData(int fd, struct yukonPacket *packet, void *data, unsigned int size);
+
 uint64_t getPacket(int fd, uint8_t type)
 {
-	read(fd, &packet, sizeof(struct yukonPacket));
+	if (read(fd, &packet, sizeof(struct yukonPacket)) == 0)
+		return 0;
 
 	if (packet.type == type)
 		return read(fd, buffer, packet.size);
 
 	lseek(fd, packet.size, SEEK_CUR);
 	return getPacket(fd, type);
-}
-
-static void writeFrame(int fd, uint32_t width, uint32_t height)
-{
-	static const char header[] = "FRAME\n";
-	write(fd, header, sizeof(header) - 1);
-
-	uint8_t *data = (uint8_t *) buffer;
-
-	for (uint32_t y = height - 1; y < height; --y) {
-		write(fd, data + y * width, width);
-	}
-
-	data += width * height;
-
-	for (int i = 0; i < 2; ++i) {
-		for (uint32_t y = (height / 2) - 1; y < (height / 2); --y) {
-			write(fd, data + y * (width / 2), (width / 2));
-		}
-		data += width * height / 4;
-	}
 }
 
 static int usage(char *self)
@@ -65,13 +52,10 @@ int main(int argc, char *argv[])
 	memcpy(streamHeader, buffer, len);
 
 	if (type == 0x01) {
-		char header[4096];
-		int n = snprintf(header, 4096, "YUV4MPEG2 W%d H%d F%d:1 Ip\n", streamHeader[1], streamHeader[2], fps);
-		write(1, header, n);
+		y4mWriteHeader(1, streamHeader[1], streamHeader[2], fps);
+	} else if (type == 0x02) {
+		wavWriteHeader(1, 32, 48000);
 	}
-
-	uint64_t inc = 1000000 / fps;
-	uint64_t cur = packet.time;
 
 	for (;;) {
 		uint64_t size = getPacket(fd, type);
@@ -79,12 +63,9 @@ int main(int argc, char *argv[])
 			break;
 
 		if (type == 0x01) {
-			while (cur < packet.time) {
-				writeFrame(1, streamHeader[1], streamHeader[2]);
-				cur += inc;
-			}
+			y4mWriteData(1, &packet, buffer, size);
 		} else if (type == 0x02) {
-			write(1, buffer, size);
+			wavWriteData(1, &packet, buffer, size);
 		}
 	}
 

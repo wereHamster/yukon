@@ -50,8 +50,13 @@ snd_pcm_hw_params_t *getParams(snd_pcm_t *pcm)
 	logMessage(3, "params: buffer size\n");
 	if (snd_pcm_hw_params_set_buffer_size(pcm, params, size) < 0)
 		goto failed;
+
+	int dir;
+	unsigned int periods;
+	if (snd_pcm_hw_params_get_periods_min (params, &periods, &dir) < 0)
+		goto failed;
 	logMessage(3, "params: periods\n");
-	if (snd_pcm_hw_params_set_periods(pcm, params, 2, 1) < 0)
+	if (snd_pcm_hw_params_set_periods(pcm, params, periods, dir) < 0)
 		goto failed;
 
 	return params;

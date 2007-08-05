@@ -2,7 +2,6 @@
 #include <yukon.h>
 
 static unsigned int w, h;
-static unsigned int targetFps;
 static uint64_t timeStep;
 static uint64_t timeNext;
 
@@ -20,7 +19,6 @@ void y4mWriteHeader(int fd, struct yukonPacket *packet, void *data, unsigned int
 
 	w = width;
 	h = height;
-	targetFps = fps;
 	timeStep = 1000000 / fps;
 }
 
@@ -54,9 +52,11 @@ void y4mWriteData(int fd, struct yukonPacket *packet, void *data, unsigned int s
 {
 	if (pkt.time == 0) {
 		timeNext = packet->time;
-	} else if (diff(pkt.time, timeNext) < diff(packet->time, timeNext)) {
-		writeFrame(fd, w, h);
-		timeNext += timeStep;
+	} else {
+		while (diff(pkt.time, timeNext) < diff(packet->time, timeNext)) {
+			writeFrame(fd, w, h);
+			timeNext += timeStep;
+		}
 	}
 
 	pkt = *packet;

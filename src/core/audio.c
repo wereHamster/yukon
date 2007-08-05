@@ -53,7 +53,7 @@ snd_pcm_hw_params_t *getParams(snd_pcm_t *pcm)
 
 	int dir;
 	unsigned int periods;
-	if (snd_pcm_hw_params_get_periods_min (params, &periods, &dir) < 0)
+	if (snd_pcm_hw_params_get_periods_min(params, &periods, &dir) < 0)
 		goto failed;
 	logMessage(3, "params: periods\n");
 	if (snd_pcm_hw_params_set_periods(pcm, params, periods, dir) < 0)
@@ -137,7 +137,7 @@ void *audioThreadCallback(void *data)
 		if (snd_pcm_state(pcm) == SND_PCM_STATE_PREPARED)
 			snd_pcm_start(pcm);
 
-		int err = wait(pcm, ufds, count);
+		int err = xrun(pcm, wait(pcm, ufds, count)); 
 		if (err < 0)
 			continue;
 

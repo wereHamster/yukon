@@ -20,7 +20,7 @@ struct yukonEngine *yukonEngineCreate(const char *spec, unsigned long scale, uns
 
 	pthread_create(&engine->audioThread, NULL, audioThreadCallback, engine);
 
-	uint32_t header[3] = { scale, engine->size[0] >> scale, engine->size[1] >> scale };
+	uint32_t header[4] = { scale, engine->size[0] >> scale, engine->size[1] >> scale, yukonGlobal.fps };
 	struct yukonPacket *packet = yukonPacketCreate(0x00, sizeof(header));
 	memcpy(yukonPacketPayload(packet), &header, sizeof(header));
 	yukonStreamPut(engine->stream, packet);

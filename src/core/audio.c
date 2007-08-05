@@ -117,6 +117,11 @@ void *audioThreadCallback(void *data)
 
 	snd_pcm_poll_descriptors(pcm, ufds, count);
 
+	uint32_t header[1] = { snd_pcm_frames_to_bytes(pcm, 1) / 2 };
+	struct yukonPacket *pkt = yukonPacketCreate(0x02, sizeof(header));
+	memcpy(yukonPacketPayload(pkt), &header, sizeof(header));
+	yukonStreamPut(engine->stream, pkt);
+
 	for (;;) {
 		if (snd_pcm_state(pcm) == SND_PCM_STATE_PREPARED)
 			snd_pcm_start(pcm);
@@ -125,7 +130,7 @@ void *audioThreadCallback(void *data)
 		if (err < 0)
 			continue;
 
-		struct yukonPacket *packet = yukonPacketCreate(0x02, snd_pcm_frames_to_bytes(pcm, period));
+		struct yukonPacket *packet = yukonPacketCreate(0x03, snd_pcm_frames_to_bytes(pcm, period));
 		if (packet == NULL)
 			continue;
 

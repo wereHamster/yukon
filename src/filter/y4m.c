@@ -9,8 +9,11 @@ static uint64_t timeNext;
 static struct yukonPacket pkt;
 static char buffer[2500 * 2500* 4];
 
-void y4mWriteHeader(int fd, unsigned int width, unsigned int height, unsigned int fps)
+void y4mWriteHeader(int fd, struct yukonPacket *packet, void *data, unsigned int size)
 {
+	uint32_t *sh = data;
+	unsigned int scale = sh[0], width = sh[1], height = sh[2], fps = sh[3];
+
 	char header[4096];
 	int n = snprintf(header, 4096, "YUV4MPEG2 W%d H%d F%d:1 Ip\n", width, height, fps);
 	write(fd, header, n);
@@ -50,16 +53,12 @@ static uint64_t diff(uint64_t t1, uint64_t t2)
 void y4mWriteData(int fd, struct yukonPacket *packet, void *data, unsigned int size)
 {
 	if (pkt.time == 0) {
-		pkt = *packet;
-		memcpy(buffer, data, size);
-		timeNext = pkt.time;
-	} else if (diff(pkt.time, timeNext) > diff(packet->time, timeNext)) {
-		pkt = *packet;
-		memcpy(buffer, data, size);
-	} else {
+		timeNext = packet->time;
+	} else if (diff(pkt.time, timeNext) < diff(packet->time, timeNext)) {
 		writeFrame(fd, w, h);
 		timeNext += timeStep;
-		pkt = *packet;
-		memcpy(buffer, data, size);
 	}
+
+	pkt = *packet;
+	memcpy(buffer, data, size);
 }

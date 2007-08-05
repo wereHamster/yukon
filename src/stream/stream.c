@@ -1,5 +1,6 @@
 
 #include <stream.h>
+#include <stdio.h>
 
 void streamFrameResample(void *buf, unsigned long w, unsigned long h);
 void streamFrameConvert(void *dst[3], void *src, unsigned long w, unsigned long h);
@@ -25,7 +26,7 @@ static void *streamMultiplexerThread(void *data)
 {
 	struct yukonStream *stream = data;
 
-	uint32_t header[3];
+	uint32_t header[4];
 
 	for (;;) {
 		struct yukonPacket *packet = yukonBufferGet(stream->buffer);
@@ -44,6 +45,10 @@ static void *streamMultiplexerThread(void *data)
 			write(stream->fileDescriptor, buffer, packet->size);
 			break;
 		case 0x02:
+			write(stream->fileDescriptor, packet, sizeof(struct yukonPacket));
+			write(stream->fileDescriptor, yukonPacketPayload(packet), packet->size);
+			break;
+		case 0x03:
 			write(stream->fileDescriptor, packet, sizeof(struct yukonPacket));
 			write(stream->fileDescriptor, yukonPacketPayload(packet), packet->size);
 			break;

@@ -1,9 +1,9 @@
 
 #include <yukon.h>
 
-static uint64_t type[3];
-static uint64_t size[3];
-static uint64_t tstamp[3][2];
+static uint64_t type[4];
+static uint64_t size[4];
+static uint64_t tstamp[4][2];
 
 static int usage(char *self)
 {
@@ -21,7 +21,7 @@ static const char *timeFormat(uint64_t time)
 
 static void printStat(unsigned char t)
 {
-	printf("  type 0x00: (%lu)\n", type[t]);
+	printf("  type 0x%02x: (%lu)\n", t, type[t]);
 	printf("    size: %lu\n", size[t]);
 	printf("    time: %s\n", timeFormat(tstamp[t][1] - tstamp[t][0]));
 
@@ -61,7 +61,7 @@ int main(int argc, char *argv[])
 
 	printf(" == Statistics:\n");
 
-	for (unsigned char t = 0x00; t < 0x03; ++t)
+	for (unsigned char t = 0x00; t < 0x04; ++t)
 		printStat(t);
 
 	close(fd);

@@ -1,5 +1,6 @@
 
 #include <yukon.h>
+#include <sys/time.h>
 
 static uint64_t type[4];
 static uint64_t size[4];
@@ -10,20 +11,29 @@ static int usage(char *self)
 	return printf("Usage: %s yukon-stream.seom\n", self);
 }
 
-static const char *timeFormat(uint64_t time)
+static void dateFormat(char *buf, uint64_t time)
 {
-	static char buf[64];
 	time_t tim = (time_t) time / 1000000;
 	struct tm *tm = localtime(&tim);
-	snprintf(buf, 64, "%02d:%02d.%03d", tm->tm_min, tm->tm_sec, (int) (time / 1000) % 1000);
-	return buf;
+	snprintf(buf, 64, "%04d/%02d/%02d %02d:%02d:%02d.%03d", 1900 + tm->tm_year, tm->tm_mon, tm->tm_mday, tm->tm_hour, tm->tm_min, tm->tm_sec, (int) (time / 1000) % 1000);
+}
+
+static void timeFormat(char *buf, uint64_t time)
+{
+	uint64_t sec = time / 1000000;
+	snprintf(buf, 64, "%02d:%02d:%02d.%03d", sec / 60 / 60, sec / 60 % 60, sec % 60, time / 1000 % 1000);
 }
 
 static void printStat(unsigned char t)
 {
 	printf("  type 0x%02x: (%llu)\n", t, type[t]);
 	printf("    size: %llu\n", size[t]);
-	printf("    time: %s\n", timeFormat(tstamp[t][1] - tstamp[t][0]));
+
+	char buf[3][64];
+	dateFormat(buf[0], tstamp[t][0]);
+	dateFormat(buf[1], tstamp[t][1]);
+	timeFormat(buf[2], tstamp[t][1] - tstamp[t][0]);
+	printf("    time: %s - %s (%s)\n", buf[0], buf[1], buf[2]);
 
 	if (tstamp[t][1] == tstamp[t][0])
 		return;
@@ -60,11 +70,14 @@ int main(int argc, char *argv[])
 
 		static struct yukonPacket start;
 		static struct yukonPacket old;
-		if (packet.type == 0x00) {
+		if (packet.type == 0x02) {
 			start = packet;
-		} else if (packet.type == 0x01) {
-			if (packet.time - old.time > 100000)
-				fprintf(stderr, "packet diff %llu at %llu (%s)\n", packet.time - old.time, type[packet.type], timeFormat(packet.time - start.time));
+		} else if (packet.type == 0x03) {
+			if (packet.time - old.time > 180000) {
+				char buf[64];
+				timeFormat(buf, packet.time - start.time);
+				fprintf(stderr, "packet diff %llu at %llu (%s)\n", packet.time - old.time, type[packet.type], buf);
+			}
 			old = packet;
 		}
 			

@@ -21,8 +21,8 @@ static const char *timeFormat(uint64_t time)
 
 static void printStat(unsigned char t)
 {
-	printf("  type 0x%02x: (%lu)\n", t, type[t]);
-	printf("    size: %lu\n", size[t]);
+	printf("  type 0x%02x: (%llu)\n", t, type[t]);
+	printf("    size: %llu\n", size[t]);
 	printf("    time: %s\n", timeFormat(tstamp[t][1] - tstamp[t][0]));
 
 	if (tstamp[t][1] == tstamp[t][0])

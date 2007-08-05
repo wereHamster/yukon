@@ -2,6 +2,9 @@
 #ifndef __YUKON_H__
 #define __YUKON_H__
 
+#define _FILE_OFFSET_BITS 64
+#define _LARGEFILE_SOURCE
+
 #include <stdarg.h>
 #include <fcntl.h>
 #include <unistd.h>

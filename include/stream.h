@@ -2,6 +2,9 @@
 #ifndef __YUKON_STREAM__
 #define __YUKON_STREAM__
 
+#define _FILE_OFFSET_BITS 64
+#define _LARGEFILE_SOURCE
+
 #include <pthread.h>
 #include <stdint.h>
 #include <stdlib.h>

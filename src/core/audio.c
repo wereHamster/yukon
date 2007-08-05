@@ -1,6 +1,7 @@
 
 #include <alsa/asoundlib.h>
 #include <yukon.h>
+#include <alloca.h>
 
 static int xrun(snd_pcm_t *handle, int err)
 {
@@ -17,36 +18,72 @@ static int xrun(snd_pcm_t *handle, int err)
 	}
 }
 
-snd_pcm_t *openAudioDevice(const char *device, snd_pcm_uframes_t *period)
+snd_pcm_hw_params_t *getParams(snd_pcm_t *pcm)
 {
-	snd_pcm_t *pcm = NULL;
-	if (snd_pcm_open(&pcm, device, SND_PCM_STREAM_CAPTURE, 0) < 0)
-		return NULL;
-
 	snd_pcm_hw_params_t *params;
 	snd_pcm_hw_params_malloc(&params);
 	snd_pcm_hw_params_any(pcm, params);
-	
-	snd_pcm_hw_params_set_access(pcm, params, SND_PCM_ACCESS_RW_INTERLEAVED);
-	snd_pcm_hw_params_set_format(pcm, params, SND_PCM_FORMAT_S32_LE);
-	snd_pcm_hw_params_set_channels(pcm, params, 2);
-	snd_pcm_hw_params_set_rate(pcm, params, 48000, 0);
+
+	if (snd_pcm_hw_params_set_access(pcm, params, SND_PCM_ACCESS_RW_INTERLEAVED) < 0)
+		goto failed;
+
+	snd_pcm_format_mask_t *formats = alloca(snd_pcm_format_mask_sizeof());
+	snd_pcm_format_mask_none(formats);
+	snd_pcm_format_mask_set(formats, SND_PCM_FORMAT_S16_LE);
+	snd_pcm_format_mask_set(formats, SND_PCM_FORMAT_S24_LE);
+	snd_pcm_format_mask_set(formats, SND_PCM_FORMAT_S32_LE);
+
+	if (snd_pcm_hw_params_set_format_mask(pcm, params, formats) < 0)
+		goto failed;
+	if (snd_pcm_hw_params_set_channels(pcm, params, 2) < 0)
+		goto failed;
+	if (snd_pcm_hw_params_set_rate(pcm, params, 48000, 0) < 0)
+		goto failed;
 
 	snd_pcm_uframes_t size;
-	snd_pcm_hw_params_get_buffer_size_max(params, &size);
-	snd_pcm_hw_params_set_buffer_size(pcm, params, size);
-	snd_pcm_hw_params_set_periods(pcm, params, 2, 1);
+	if (snd_pcm_hw_params_get_buffer_size_max(params, &size) < 0)
+		goto failed;
+	if (snd_pcm_hw_params_set_buffer_size(pcm, params, size) < 0)
+		goto failed;
+	if (snd_pcm_hw_params_set_periods(pcm, params, 2, 1) < 0)
+		goto failed;
 
-	snd_pcm_hw_params(pcm, params);
+	return params;
+
+failed:
+	snd_pcm_hw_params_free(params);
+	return NULL;
+}
+
+snd_pcm_t *openAudioDevice(const char *device, snd_pcm_uframes_t *period)
+{
+	snd_pcm_t *pcm= NULL;
+	if (snd_pcm_open(&pcm, device, SND_PCM_STREAM_CAPTURE, 0) < 0)
+		return NULL;
+
+	snd_pcm_hw_params_t *params = getParams(pcm);
+	if (params == NULL)
+		goto failed;
+
+	if (snd_pcm_hw_params(pcm, params) < 0)
+		goto failed;
+
 	snd_pcm_hw_params_get_period_size(params, period, NULL);
+	snd_pcm_hw_params_free(params);
 
-	free(params);
-	
-	snd_output_t *output = NULL;
+	snd_output_t *output= NULL;
 	snd_output_stdio_attach(&output, stdout, 0);
 	snd_pcm_dump(pcm, output);
 
 	return pcm;
+
+failed:
+	logMessage(3, "failed to open audio device\n");
+
+	snd_pcm_hw_params_free(params);
+	snd_pcm_close(pcm);
+
+	return NULL;
 }
 
 static int wait(snd_pcm_t *pcm, struct pollfd *ufds, unsigned int count)
@@ -84,7 +121,7 @@ void *audioThreadCallback(void *data)
 		if (snd_pcm_state(pcm) == SND_PCM_STATE_PREPARED)
 			snd_pcm_start(pcm);
 
-		int err = xrun(pcm, wait(pcm, ufds, count));
+		int err = wait(pcm, ufds, count);
 		if (err < 0)
 			continue;
 
@@ -101,7 +138,7 @@ void *audioThreadCallback(void *data)
 			logMessage(2, "overrun!\n");
 			ret = xrun(pcm, ret);
 		}
-		
+
 		yukonStreamPut(engine->stream, packet);
 	}
 

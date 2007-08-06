@@ -43,18 +43,6 @@ void wavWriteHeader(int fd, struct yukonPacket *packet, void *data, unsigned int
 	write(fd, &chunk, sizeof(struct wavData));
 
 	bps = format;
-	for (unsigned int frame = 0; frame < 48000; ++frame) {
-		if (bps == 2) {
-			int16_t *ptr = (int16_t *) &silence[frame * 2 * bps];
-			ptr[0] = ptr[1] = 0xffff;
-		} else if (bps == 4) {
-			int32_t *ptr = (int32_t *) &silence[frame * 2 * bps];
-			ptr[0] = ptr[1] = 0xffffffff;
-			//fprintf(stderr, "setting silence to %p + 8\n", ptr);
-		} else {
-			exit(0);
-		}
-	}
 }
 
 static uint64_t streamStart;

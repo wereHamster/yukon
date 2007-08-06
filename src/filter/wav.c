@@ -24,6 +24,7 @@ struct wavData {
 	uint32_t 	chunkSize;
 } __attribute__((packed));
 
+static unsigned int bps;
 void wavWriteHeader(int fd, struct yukonPacket *packet, void *data, unsigned int size)
 {
 	uint32_t *sh = data;
@@ -37,9 +38,21 @@ void wavWriteHeader(int fd, struct yukonPacket *packet, void *data, unsigned int
 
 	struct wavData chunk = { htonl(0x64617461), 0xffffffff };
 	write(fd, &chunk, sizeof(struct wavData));
+
+	bps = format;
 }
 
+static struct yukonPacket last;
 void wavWriteData(int fd, struct yukonPacket *packet, void *data, unsigned int size)
 {
+	if (last.time == 0)
+		last = *packet;
+
+	static char buffer[48000 * 4 * 2 * 8];
+	int delay = packet->time - last.time - 1000000 * last.size / (2 * bps) / 48000;
+	if (delay > 1000)
+		write(fd, buffer, delay * 48000 / 1000000);
+		
 	write(fd, data, size);
+	last = *packet;
 }

@@ -1,4 +1,5 @@
 
+#include <alsa/asoundlib.h>
 #include <yukon.h>
 #include <arpa/inet.h>
 
@@ -25,6 +26,8 @@ struct wavData {
 } __attribute__((packed));
 
 static unsigned int bps;
+static char silence[48000 * 4 * 2 * 8];
+
 void wavWriteHeader(int fd, struct yukonPacket *packet, void *data, unsigned int size)
 {
 	uint32_t *sh = data;
@@ -40,19 +43,35 @@ void wavWriteHeader(int fd, struct yukonPacket *packet, void *data, unsigned int
 	write(fd, &chunk, sizeof(struct wavData));
 
 	bps = format;
+	for (unsigned int frame = 0; frame < 48000; ++frame) {
+		if (bps == 2) {
+			int16_t *ptr = (int16_t *) &silence[frame * 2 * bps];
+			ptr[0] = ptr[1] = 0xffff;
+		} else if (bps == 4) {
+			int32_t *ptr = (int32_t *) &silence[frame * 2 * bps];
+			ptr[0] = ptr[1] = 0xffffffff;
+			//fprintf(stderr, "setting silence to %p + 8\n", ptr);
+		} else {
+			exit(0);
+		}
+	}
 }
 
-static struct yukonPacket last;
+static uint64_t streamStart;
+static uint64_t dataSize;
+
 void wavWriteData(int fd, struct yukonPacket *packet, void *data, unsigned int size)
 {
-	if (last.time == 0)
-		last = *packet;
+	if (streamStart == 0)
+		streamStart = packet->time;
 
-	static char buffer[48000 * 4 * 2 * 8];
-	int delay = packet->time - last.time - 1000000 * last.size / (2 * bps) / 48000;
-	if (delay > 1000)
-		write(fd, buffer, delay * 48000 / 1000000);
+	int64_t delay = packet->time - streamStart - 1000000 * dataSize / (2 * bps) / 48000;
+	if (delay > 1000) {
+		uint64_t insert = delay * 48000 * 2 * bps / 1000000;
+		write(fd, silence, insert + ((bps * 2) - insert % (bps * 2)));
+		dataSize += insert;
+	}
 		
 	write(fd, data, size);
-	last = *packet;
+	dataSize += size;
 }

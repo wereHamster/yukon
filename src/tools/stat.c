@@ -13,15 +13,15 @@ static int usage(char *self)
 
 static void dateFormat(char *buf, uint64_t time)
 {
-	time_t tim = (time_t) time / 1000000;
+	time_t tim = time / 1000000;
 	struct tm *tm = localtime(&tim);
-	snprintf(buf, 64, "%04d/%02d/%02d %02d:%02d:%02d.%03d", 1900 + tm->tm_year, tm->tm_mon, tm->tm_mday, tm->tm_hour, tm->tm_min, tm->tm_sec, (int) (time / 1000) % 1000);
+	snprintf(buf, 64, "%04d/%02d/%02d %02d:%02d:%02d.%03d", 1900 + tm->tm_year, tm->tm_mon, tm->tm_mday, tm->tm_hour, tm->tm_min, tm->tm_sec, (int) time / 1000 % 1000);
 }
 
 static void timeFormat(char *buf, uint64_t time)
 {
 	uint64_t sec = time / 1000000;
-	snprintf(buf, 64, "%02d:%02d:%02d.%03d", sec / 60 / 60, sec / 60 % 60, sec % 60, time / 1000 % 1000);
+	snprintf(buf, 64, "%02d:%02d:%02d.%03d", (int) sec / 60 / 60, (int) sec / 60 % 60, (int) sec % 60, (int) time / 1000 % 1000);
 }
 
 static void printStat(unsigned char t)

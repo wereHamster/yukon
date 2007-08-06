@@ -1,6 +1,8 @@
 
 #include <yukon.h>
 
+static uint64_t targetInterval;
+
 struct yukonEngine *yukonEngineCreate(const char *spec, unsigned long scale, unsigned long size[2])
 {
 	struct yukonEngine *engine = malloc(sizeof(struct yukonEngine));
@@ -27,6 +29,8 @@ struct yukonEngine *yukonEngineCreate(const char *spec, unsigned long scale, uns
 
 	logMessage(4, "Header %u:%u\n", header[1], header[2]);
 
+	targetInterval = 1000000 / yukonGlobal.fps;
+
 	return engine;
 }
 
@@ -44,7 +48,12 @@ void yukonEngineCapture(struct yukonEngine *engine)
 	uint64_t now = getTime();
 	static uint64_t lastCapture;
 
-	if (now - lastCapture < 1000000 / yukonGlobal.fps || yukonStreamStatus(engine->stream) > 10)
+	unsigned long queueCount = yukonStreamStatus(engine->stream);
+	targetInterval = targetInterval * 0.9 + (targetInterval + (-2.0 + queueCount) * 100.0) * 0.1;
+	if (targetInterval < 1000000 / yukonGlobal.fps)
+		targetInterval = 1000000 / yukonGlobal.fps;
+
+	if (now - lastCapture < targetInterval * 0.9 || yukonStreamStatus(engine->stream) > 10)
 		return;
 
 	lastCapture = now;

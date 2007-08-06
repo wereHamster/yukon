@@ -44,7 +44,7 @@ void yukonEngineCapture(struct yukonEngine *engine)
 	uint64_t now = getTime();
 	static uint64_t lastCapture;
 
-	if (now - lastCapture < 1000000 / yukonGlobal.fps || yukonStreamStatus(engine->stream) > 12)
+	if (now - lastCapture < 1000000 / yukonGlobal.fps || yukonStreamStatus(engine->stream) > 10)
 		return;
 
 	lastCapture = now;

@@ -20,6 +20,8 @@ struct yukonEngine *yukonEngineCreate(const char *spec, unsigned long scale, uns
 	
 	logMessage(4, "Capturing %u:%u\n", engine->size[0], engine->size[1]);
 
+	pthread_mutex_init(&engine->audioMutex, NULL);
+	engine->audioRunning = 1;
 	pthread_create(&engine->audioThread, NULL, audioThreadCallback, engine);
 
 	uint32_t header[4] = { scale, engine->size[0] >> scale, engine->size[1] >> scale, yukonGlobal.fps };
@@ -68,6 +70,12 @@ void yukonEngineCapture(struct yukonEngine *engine)
 
 struct yukonEngine *yukonEngineDestroy(struct yukonEngine *engine)
 {
+	pthread_mutex_lock(&engine->audioMutex);
+	engine->audioRunning = 0;
+	pthread_mutex_unlock(&engine->audioMutex);
+
+	pthread_join(engine->audioThread, NULL);
+
 	yukonStreamDestroy(engine->stream);
 	free(engine);
 

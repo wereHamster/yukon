@@ -48,6 +48,9 @@ extern yukonGlobalData yukonGlobal;
 struct yukonEngine {
 	struct yukonStream *stream;
 	unsigned long size[2];
+
+	pthread_mutex_t audioMutex;
+	unsigned long audioRunning;
 	pthread_t audioThread;
 };
 

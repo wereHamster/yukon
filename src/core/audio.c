@@ -137,6 +137,11 @@ void *audioThreadCallback(void *data)
 		if (snd_pcm_state(pcm) == SND_PCM_STATE_PREPARED)
 			snd_pcm_start(pcm);
 
+		pthread_mutex_lock(&engine->audioMutex);
+		if (engine->audioRunning == 0)
+			break;
+		pthread_mutex_unlock(&engine->audioMutex);
+
 		int err = xrun(pcm, wait(pcm, ufds, count)); 
 		if (err < 0)
 			continue;
@@ -156,6 +161,27 @@ void *audioThreadCallback(void *data)
 		}
 
 		yukonStreamPut(engine->stream, packet);
+	}
+
+	pthread_mutex_unlock(&engine->audioMutex);
+	
+	snd_pcm_drain(pcm);
+	snd_pcm_uframes_t left = snd_pcm_avail_update(pcm);
+	if (left > 0) {
+		struct yukonPacket *packet = yukonPacketCreate(0x03, snd_pcm_frames_to_bytes(pcm, left));
+		if (packet) {
+			snd_pcm_sframes_t delay;
+			snd_pcm_delay(pcm, &delay);
+			packet->time -= 1000000 / 48000 * delay;
+
+			snd_pcm_sframes_t ret = snd_pcm_readi(pcm, yukonPacketPayload(packet), left);
+			if (ret < 0) {
+				logMessage(2, "overrun (%d)!\n", ret);
+				ret = xrun(pcm, ret);
+			}
+
+			yukonStreamPut(engine->stream, packet);
+		}
 	}
 
 	snd_pcm_close(pcm);

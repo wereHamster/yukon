@@ -21,7 +21,7 @@ static void dateFormat(char *buf, uint64_t time)
 static void timeFormat(char *buf, uint64_t time)
 {
 	uint64_t sec = time / 1000000;
-	snprintf(buf, 64, "%02d:%02d:%02d.%03d", (int) sec / 60 / 60, (int) sec / 60 % 60, (int) sec % 60, (int) (time / 1000 % 1000));
+	snprintf(buf, 64, "%02d:%02d:%02d.%03d", (int) (sec / 60 / 60), (int) (sec / 60 % 60), (int) (sec % 60), (int) (time / 1000 % 1000));
 }
 
 static void printStat(unsigned char t)

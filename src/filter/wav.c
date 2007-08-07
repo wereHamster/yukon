@@ -56,7 +56,8 @@ void wavWriteData(int fd, struct yukonPacket *packet, void *data, unsigned int s
 	int64_t delay = packet->time - streamStart - 1000000 * dataSize / (2 * bps) / 48000;
 	if (delay > 1000) {
 		uint64_t insert = delay * 48000 * 2 * bps / 1000000;
-		write(fd, silence, insert + ((bps * 2) - insert % (bps * 2)));
+		insert -= insert % (2 * bps);
+		write(fd, silence, insert);
 		dataSize += insert;
 	}
 		

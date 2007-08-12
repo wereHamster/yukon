@@ -70,7 +70,7 @@ snd_pcm_t *openAudioDevice(const char *device, snd_pcm_uframes_t *period)
 {
 	snd_pcm_t *pcm= NULL;
 	if (snd_pcm_open(&pcm, device, SND_PCM_STREAM_CAPTURE, 0) < 0)
-		goto failed;
+		return NULL;
 
 	snd_pcm_hw_params_t *params = getParams(pcm);
 	if (params == NULL)
@@ -89,8 +89,6 @@ snd_pcm_t *openAudioDevice(const char *device, snd_pcm_uframes_t *period)
 	return pcm;
 
 failed:
-	logMessage(3, "failed to open audio device\n");
-
 	snd_pcm_hw_params_free(params);
 	snd_pcm_close(pcm);
 
@@ -118,8 +116,10 @@ void *audioThreadCallback(void *data)
 
 	snd_pcm_uframes_t period;
 	snd_pcm_t *pcm = openAudioDevice("hw:0", &period);
-	if (pcm == NULL)
+	if (pcm == NULL) {
+		logMessage(3, "failed to open audio device\n");
 		return NULL;
+	}
 
 	logMessage(4, "period: %u\n", period);
 

@@ -62,15 +62,20 @@ snd_pcm_hw_params_t *getParams(snd_pcm_t *pcm)
 	return params;
 
 failed:
+	logMessage(3, "failed to set PCM parameters\n");
 	snd_pcm_hw_params_free(params);
 	return NULL;
 }
 
 snd_pcm_t *openAudioDevice(const char *device, snd_pcm_uframes_t *period)
 {
-	snd_pcm_t *pcm= NULL;
-	if (snd_pcm_open(&pcm, device, SND_PCM_STREAM_CAPTURE, 0) < 0)
+	snd_pcm_t *pcm = NULL;
+
+	int err = snd_pcm_open(&pcm, device, SND_PCM_STREAM_CAPTURE, 0);
+	if (err < 0) {
+		logMessage(3, "failed to open PCM device: %s\n", snd_strerror(err));
 		return NULL;
+	}
 
 	snd_pcm_hw_params_t *params = getParams(pcm);
 	if (params == NULL)
@@ -117,7 +122,7 @@ void *audioThreadCallback(void *data)
 	snd_pcm_uframes_t period;
 	snd_pcm_t *pcm = openAudioDevice("hw:0", &period);
 	if (pcm == NULL) {
-		logMessage(3, "failed to open audio device\n");
+		logMessage(3, "failed to set up audio capturing device, no sound will be captured!\n");
 		return NULL;
 	}
 

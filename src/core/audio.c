@@ -70,7 +70,7 @@ snd_pcm_t *openAudioDevice(const char *device, snd_pcm_uframes_t *period)
 {
 	snd_pcm_t *pcm= NULL;
 	if (snd_pcm_open(&pcm, device, SND_PCM_STREAM_CAPTURE, 0) < 0)
-		return failed;
+		goto failed;
 
 	snd_pcm_hw_params_t *params = getParams(pcm);
 	if (params == NULL)

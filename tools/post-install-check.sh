@@ -21,7 +21,7 @@ fi
 RET=`yukon printenv | grep LD_LIBRARY_PATH | grep yukon:`
 if [ -z "${RET}" ]; then
 	echo "The yukon script doesn't work correctly."
-	echo " - Copy sysconf to /etc/yukon/system or \$HOME/.yukon/system"
+	echo " - Copy sysconf to /etc/yukon/system/ or \$HOME/.yukon/system/"
 
 	exit 1
 fi

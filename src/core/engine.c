@@ -11,6 +11,7 @@ struct yukonEngine *yukonEngineCreate(const char *spec, unsigned long scale, uns
 
 	engine->stream = yukonStreamCreate(spec, 16);
 	if (engine->stream == NULL) {
+		logMessage(4, "Failed to open output stream\n");
 		free(engine);
 		return NULL;
 	}
@@ -29,7 +30,7 @@ struct yukonEngine *yukonEngineCreate(const char *spec, unsigned long scale, uns
 	memcpy(yukonPacketPayload(packet), &header, sizeof(header));
 	yukonStreamPut(engine->stream, packet);
 
-	logMessage(4, "Header %u:%u\n", header[1], header[2]);
+	logMessage(4, "Header %u:%u:%u:%u\n", header[0], header[1], header[2], header[3]);
 
 	targetInterval = 1000000 / yukonGlobal.fps;
 

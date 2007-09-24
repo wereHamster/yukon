@@ -28,9 +28,9 @@ struct wavData {
 static unsigned int bps;
 static char silence[48000 * 4 * 2 * 8];
 
-void wavWriteHeader(int fd, struct yukonPacket *packet, void *data, unsigned int size)
+void wavWriteHeader(int fd, struct seomPacket *packet)
 {
-	uint32_t *sh = data;
+	uint32_t *sh = seomPacketPayload(packet);
 	unsigned int format = sh[0];
 
 	struct wavHeader header = { htonl(0x52494646), 0xffffffff, htonl(0x57415645) };
@@ -48,7 +48,7 @@ void wavWriteHeader(int fd, struct yukonPacket *packet, void *data, unsigned int
 static uint64_t streamStart;
 static uint64_t dataSize;
 
-void wavWriteData(int fd, struct yukonPacket *packet, void *data, unsigned int size)
+void wavWriteData(int fd, struct seomPacket *packet)
 {
 	if (streamStart == 0)
 		streamStart = packet->time;
@@ -61,6 +61,6 @@ void wavWriteData(int fd, struct yukonPacket *packet, void *data, unsigned int s
 		dataSize += insert;
 	}
 		
-	write(fd, data, size);
-	dataSize += size;
+	write(fd, seomPacketPayload(packet), packet->size);
+	dataSize += packet->size;
 }

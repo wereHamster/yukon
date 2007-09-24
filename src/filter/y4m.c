@@ -5,12 +5,12 @@ static unsigned int w, h;
 static uint64_t timeStep;
 static uint64_t timeNext;
 
-static struct yukonPacket pkt;
+static struct seomPacket pkt;
 static char buffer[2500 * 2500* 4];
 
-void y4mWriteHeader(int fd, struct yukonPacket *packet, void *data, unsigned int size)
+void y4mWriteHeader(int fd, struct seomPacket *packet)
 {
-	uint32_t *sh = data;
+	uint32_t *sh = seomPacketPayload(packet);
 	unsigned int scale = sh[0], width = sh[1], height = sh[2], fps = sh[3];
 
 	char header[4096];
@@ -48,7 +48,7 @@ static uint64_t diff(uint64_t t1, uint64_t t2)
 	return t1 < t2 ? t2 - t1 : t1 - t2;
 }
 
-void y4mWriteData(int fd, struct yukonPacket *packet, void *data, unsigned int size)
+void y4mWriteData(int fd, struct seomPacket *packet, void *data, unsigned int size)
 {
 	if (pkt.time == 0) {
 		timeNext = packet->time;
@@ -60,5 +60,5 @@ void y4mWriteData(int fd, struct yukonPacket *packet, void *data, unsigned int s
 	}
 
 	pkt = *packet;
-	memcpy(buffer, data, size);
+	memcpy(buffer, seomPacketPayload(packet), packet->size);
 }

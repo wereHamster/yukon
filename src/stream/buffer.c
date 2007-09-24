@@ -8,7 +8,7 @@ static unsigned long num(struct yukonBuffer *buffer)
 
 struct yukonBuffer *yukonBufferCreate(unsigned long size)
 {
-	struct yukonBuffer *buffer = malloc(sizeof(struct yukonBuffer) + size * sizeof(struct yukonPacket *));
+	struct yukonBuffer *buffer = malloc(sizeof(struct yukonBuffer) + size * sizeof(struct seomPacket *));
 	if (buffer == NULL)
 		return NULL;
 
@@ -21,9 +21,8 @@ struct yukonBuffer *yukonBufferCreate(unsigned long size)
 	return buffer;
 }
 
-void yukonBufferPut(struct yukonBuffer *buffer, struct yukonPacket *packet)
+void yukonBufferPut(struct yukonBuffer *buffer, struct seomPacket *packet)
 {
-
 	pthread_mutex_lock(&buffer->mutex);
 	while (num(buffer) == buffer->size)
 		pthread_cond_wait(&buffer->cond, &buffer->mutex);
@@ -35,9 +34,9 @@ void yukonBufferPut(struct yukonBuffer *buffer, struct yukonPacket *packet)
 	pthread_cond_broadcast(&buffer->cond);
 }
 
-struct yukonPacket *yukonBufferGet(struct yukonBuffer *buffer)
+struct seomPacket *yukonBufferGet(struct yukonBuffer *buffer)
 {
-	struct yukonPacket *packet = NULL;
+	struct seomPacket *packet = NULL;
 
 	pthread_mutex_lock(&buffer->mutex);
 	while (num(buffer) == 0)

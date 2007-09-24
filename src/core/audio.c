@@ -126,7 +126,7 @@ void *audioThreadCallback(void *data)
 		return NULL;
 	}
 
-	logMessage(4, "period: %u\n", period);
+	logMessage(4, "Audio capturing device is set up (period: %u)\n", period);
 
 	int count = snd_pcm_poll_descriptors_count(pcm);
 	struct pollfd ufds[count];
@@ -134,8 +134,8 @@ void *audioThreadCallback(void *data)
 	snd_pcm_poll_descriptors(pcm, ufds, count);
 
 	uint32_t header[1] = { snd_pcm_frames_to_bytes(pcm, 1) / 2 };
-	struct yukonPacket *pkt = yukonPacketCreate(0x02, sizeof(header));
-	memcpy(yukonPacketPayload(pkt), &header, sizeof(header));
+	struct seomPacket *pkt = seomPacketCreate(0x02, sizeof(header));
+	memcpy(seomPacketPayload(pkt), &header, sizeof(header));
 	yukonStreamPut(engine->stream, pkt);
 
 	for (;;) {
@@ -151,7 +151,7 @@ void *audioThreadCallback(void *data)
 		if (err < 0)
 			continue;
 
-		struct yukonPacket *packet = yukonPacketCreate(0x03, snd_pcm_frames_to_bytes(pcm, period));
+		struct seomPacket *packet = seomPacketCreate(0x03, snd_pcm_frames_to_bytes(pcm, period));
 		if (packet == NULL)
 			continue;
 
@@ -159,7 +159,7 @@ void *audioThreadCallback(void *data)
 		snd_pcm_delay(pcm, &delay);
 		packet->time -= 1000000 / 48000 * delay;
 
-		snd_pcm_sframes_t ret = snd_pcm_readi(pcm, yukonPacketPayload(packet), period);
+		snd_pcm_sframes_t ret = snd_pcm_readi(pcm, seomPacketPayload(packet), period);
 		if (ret < 0) {
 			logMessage(2, "overrun!\n");
 			ret = xrun(pcm, ret);
@@ -173,13 +173,13 @@ void *audioThreadCallback(void *data)
 	snd_pcm_drain(pcm);
 	snd_pcm_uframes_t left = snd_pcm_avail_update(pcm);
 	if (left > 0) {
-		struct yukonPacket *packet = yukonPacketCreate(0x03, snd_pcm_frames_to_bytes(pcm, left));
+		struct seomPacket *packet = seomPacketCreate(0x03, snd_pcm_frames_to_bytes(pcm, left));
 		if (packet) {
 			snd_pcm_sframes_t delay;
 			snd_pcm_delay(pcm, &delay);
 			packet->time -= 1000000 / 48000 * delay;
 
-			snd_pcm_sframes_t ret = snd_pcm_readi(pcm, yukonPacketPayload(packet), left);
+			snd_pcm_sframes_t ret = snd_pcm_readi(pcm, seomPacketPayload(packet), left);
 			if (ret < 0) {
 				logMessage(2, "overrun (%d)!\n", ret);
 				ret = xrun(pcm, ret);

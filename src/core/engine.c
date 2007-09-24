@@ -26,8 +26,8 @@ struct yukonEngine *yukonEngineCreate(const char *spec, unsigned long scale, uns
 	pthread_create(&engine->audioThread, NULL, audioThreadCallback, engine);
 
 	uint32_t header[4] = { scale, engine->size[0] >> scale, engine->size[1] >> scale, yukonGlobal.fps };
-	struct yukonPacket *packet = yukonPacketCreate(0x00, sizeof(header));
-	memcpy(yukonPacketPayload(packet), &header, sizeof(header));
+	struct seomPacket *packet = seomPacketCreate(0x00, sizeof(header));
+	memcpy(seomPacketPayload(packet), &header, sizeof(header));
 	yukonStreamPut(engine->stream, packet);
 
 	logMessage(4, "Header %u:%u:%u:%u\n", header[0], header[1], header[2], header[3]);
@@ -61,11 +61,11 @@ void yukonEngineCapture(struct yukonEngine *engine)
 
 	lastCapture = now;
 
-	struct yukonPacket *packet = yukonPacketCreate(0x01, engine->size[0] * engine->size[1] * 4);
+	struct seomPacket *packet = seomPacketCreate(0x01, engine->size[0] * engine->size[1] * 4);
 	if (packet == NULL)
 		return;
 
-	glReadPixels(0, 0, engine->size[0], engine->size[1], GL_BGRA, GL_UNSIGNED_BYTE, yukonPacketPayload(packet));
+	glReadPixels(0, 0, engine->size[0], engine->size[1], GL_BGRA, GL_UNSIGNED_BYTE, seomPacketPayload(packet));
 	yukonStreamPut(engine->stream, packet);
 }
 

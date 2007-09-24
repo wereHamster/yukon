@@ -11,7 +11,7 @@ ASM      = yasm
 CFLAGS   = -Iinclude -Wall -std=c99 -O3
 
 OBJS     = src/core/conf.o src/core/log.o src/stream/stream.o src/core/engine.o \
-		   src/core/opengl.o src/stream/packet.o src/stream/buffer.o \
+		   src/core/opengl.o src/stream/buffer.o \
 		   src/glue/glue.o src/core/audio.o src/stream/arch/$(ARCH)/frame.o 
 LIBS     = libX11.so libGL.so
 
@@ -32,13 +32,13 @@ $(LIBS):
 	rm -f $@.native
 
 yukon-core-lib: $(OBJS)
-	$(CC) -shared -o $@ $(OBJS) -lasound
+	$(CC) -shared -o $@ $(OBJS) -lasound -lseom
 	
 filter: src/filter/main.c src/filter/wav.c src/filter/y4m.c
-	$(CC) $(CFLAGS) -o $@ src/filter/main.c src/filter/wav.c src/filter/y4m.c -lasound
+	$(CC) $(CFLAGS) -o $@ src/filter/main.c src/filter/wav.c src/filter/y4m.c -lasound -lseom
 
 stat: src/tools/stat.c
-	$(CC) $(CFLAGS) -o $@ $<
+	$(CC) $(CFLAGS) -o $@ $< -lseom
 
 sysconf:
 	echo 'LDPATH="$(PREFIX)/$(LIBDIR)/yukon"' > $@

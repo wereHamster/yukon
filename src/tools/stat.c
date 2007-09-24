@@ -1,6 +1,10 @@
 
 #include <yukon.h>
-#include <sys/time.h>
+#include <seom/stream.h>
+
+struct statStream {
+	int fileDescriptor;
+};
 
 static uint64_t type[4];
 static uint64_t size[4];
@@ -46,6 +50,21 @@ static void printStat(unsigned char t)
 	printf("    mb/s: %.1f\n", mbs);
 }
 
+static unsigned long put(void *private, const struct iovec vec[], unsigned long num)
+{
+	struct statStream *stream = private;
+	return writev(stream->fileDescriptor, vec, num);
+}
+
+static unsigned long get(void *private, const struct iovec vec[], unsigned long num)
+{
+	struct statStream *stream = private;
+	return readv(stream->fileDescriptor, vec, num);
+}
+
+static struct seomStreamOps ops = { put, get };
+
+
 int main(int argc, char *argv[])
 {
 	if (argc < 2)
@@ -55,18 +74,24 @@ int main(int argc, char *argv[])
 	if (fd < 0)
 		return usage(argv[0]);
 
+	static struct statStream private;
+	private.fileDescriptor = fd;
+	seomStream *stream = seomStreamCreate(&ops, &private);
+	if (stream == NULL)
+		return usage(argv[0]);
+
 	for (;;) {
-		static struct yukonPacket packet;
-		if (read(fd, &packet, sizeof(struct yukonPacket)) == 0)
+		struct seomPacket *packet = seomStreamGet(stream);
+		if (packet == NULL)
 			break;
 
-		lseek(fd, packet.size, SEEK_CUR);
+		type[packet->type] += 1;
+		size[packet->type] += packet->size;
+		if (tstamp[packet->type][0] == 0)
+			tstamp[packet->type][0] = packet->time;
+		tstamp[packet->type][1] = packet->time;
 
-		type[packet.type] += 1;
-		size[packet.type] += packet.size;
-		if (tstamp[packet.type][0] == 0)
-			tstamp[packet.type][0] = packet.time;
-		tstamp[packet.type][1] = packet.time;
+		seomPacketDestroy(packet);
 	}
 
 	printf(" == Statistics:\n");

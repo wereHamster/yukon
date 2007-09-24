@@ -1,25 +1,42 @@
 
 #include <yukon.h>
 
-static struct yukonPacket packet;
-static char buffer[2500 * 2500* 4];
+void y4mWriteHeader(int fd, struct seomPacket *packet);
+void y4mWriteData(int fd, struct seomPacket *packet);
 
-void y4mWriteHeader(int fd, struct yukonPacket *packet, void *data, unsigned int size);
-void y4mWriteData(int fd, struct yukonPacket *packet, void *data, unsigned int size);
+void wavWriteHeader(int fd, struct seomPacket *packet);
+void wavWriteData(int fd, struct seomPacket *packet);
 
-void wavWriteHeader(int fd, struct yukonPacket *packet, void *data, unsigned int size);
-void wavWriteData(int fd, struct yukonPacket *packet, void *data, unsigned int size);
+struct filterStream {
+	int fileDescriptor;
+};
 
-uint64_t getPacket(int fd, uint8_t type)
+static unsigned long put(void *private, const struct iovec vec[], unsigned long num)
 {
-	if (read(fd, &packet, sizeof(struct yukonPacket)) == 0)
-		return 0;
+	struct filterStream *stream = private;
+	return writev(stream->fileDescriptor, vec, num);
+}
 
-	if (packet.type == type || packet.type == type + 1)
-		return read(fd, buffer, packet.size);
+static unsigned long get(void *private, const struct iovec vec[], unsigned long num)
+{
+	struct filterStream *stream = private;
+	return readv(stream->fileDescriptor, vec, num);
+}
 
-	lseek(fd, packet.size, SEEK_CUR);
-	return getPacket(fd, type);
+static struct seomStreamOps ops = { put, get };
+
+struct seomPacket *getPacket(seomStream *stream, uint8_t type)
+{
+	for (;;) {
+		struct seomPacket *packet = seomStreamGet(stream);
+		if (packet == NULL)
+			return NULL;
+
+		if (packet->type == type || packet->type == type + 1)
+			return packet;
+
+		seomPacketDestroy(packet);
+	}
 }
 
 static int usage(char *self)
@@ -45,22 +62,28 @@ int main(int argc, char *argv[])
 	if (fd < 0)
 		return 0;
 
+	static struct filterStream private;
+	private.fileDescriptor = fd;
+	seomStream *stream = seomStreamCreate(&ops, &private);
+	if (stream == NULL)
+		return 0;
+
 	for (;;) {
-		uint64_t size = getPacket(fd, type);
-		if (size == 0)
+		struct seomPacket *packet = getPacket(stream, type);
+		if (packet == NULL)
 			break;
 
 		if (type == 0x00) {
-			if (packet.type == 0x00) {
-				y4mWriteHeader(1, &packet, buffer, size);
+			if (packet->type == 0x00) {
+				y4mWriteHeader(1, packet);
 			} else {
-				y4mWriteData(1, &packet, buffer, size);
+				y4mWriteData(1, packet);
 			}
 		} else if (type == 0x02) {
-			if (packet.type == 0x02) {
-				wavWriteHeader(1, &packet, buffer, size);
+			if (packet->type == 0x02) {
+				wavWriteHeader(1, packet);
 			} else {
-				wavWriteData(1, &packet, buffer, size);
+				wavWriteData(1, packet);
 			}
 		}
 	}

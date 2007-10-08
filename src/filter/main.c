@@ -86,6 +86,8 @@ int main(int argc, char *argv[])
 				wavWriteData(1, packet);
 			}
 		}
+
+		seomPacketDestroy(packet);
 	}
 
 	close(fd);

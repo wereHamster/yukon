@@ -98,7 +98,7 @@ void updateConfiguration(void)
 	parseOUTPUT("file:///tmp/yukon.seom");
 	parseHOTKEY("F8");
 	parseFPS("30.0");
-	parseVERBOSE("1");
+	parseVERBOSE("5");
 
 	/* now get the settings from configuration files */
 	merge("/etc/yukon/conf");

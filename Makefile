@@ -3,27 +3,43 @@ DESTDIR  =
 PREFIX   = /usr/local
 LIBDIR   = lib
 
-CC       = gcc
-CFLAGS   = -Iinclude -Wall -std=c99 -O3
+ARCH     = C
 
-OBJS     = src/core/conf.o src/core/glue.o src/core/log.o
+CC       = gcc
+ASM      = yasm
+
+CFLAGS   = -Iinclude -I$(PREFIX)/include -Wall -std=c99 -O3
+LDFLAGS  = -L$(PREFIX)/lib
+
+OBJS     = src/core/conf.o src/core/log.o src/stream/stream.o src/core/engine.o \
+		   src/core/opengl.o src/stream/buffer.o \
+		   src/glue/glue.o src/core/audio.o src/stream/arch/$(ARCH)/frame.o 
 LIBS     = libX11.so libGL.so
 
 -include config.make
 
 .PHONY: all clean install
-all: $(LIBS) yukon-core-lib sysconf
+all: $(LIBS) yukon-core-lib filter sysconf
+
+%.o: %.asm
+	$(ASM) -m $(ARCH) -f elf -o $@ $<
 
 %.o: %.c
 	$(CC) $(CFLAGS) -fPIC -c -o $@ $<
-
+	
 $(LIBS):
 	$(CC) -shared -o $@.native -Wl,-soname,$@.native
 	$(CC) $(CFLAGS) -fPIC -shared -o $@ src/libs/$(@:%.so=%.c) $@.native
 	rm -f $@.native
 
 yukon-core-lib: $(OBJS)
-	$(CC) -shared -o $@ $(OBJS) -lseom
+	$(CC) -shared -o $@ $(OBJS) $(LDFLAGS) -lasound -lseom
+	
+filter: src/filter/main.c src/filter/wav.c src/filter/y4m.c
+	$(CC) $(CFLAGS) -o $@ $^ $(LDFLAGS) -lasound -lseom
+
+stat: src/tools/stat.c
+	$(CC) $(CFLAGS) -o $@ $^ $(LDFLAGS) -lseom
 
 sysconf:
 	echo 'LDPATH="$(PREFIX)/$(LIBDIR)/yukon"' > $@
@@ -38,7 +54,7 @@ install: $(LIBS) yukon-core-lib
 	$(foreach lib,$(LIBS),install -m 755 $(lib) $(DESTDIR)$(PREFIX)/$(LIBDIR)/yukon/$(call soname,$(lib));)
 
 clean:
-	rm -f $(OBJS) $(LIBS) yukon-core-lib sysconf
+	rm -f $(OBJS) $(LIBS) filter yukon-core-lib sysconf
 
 mrproper: clean
 	rm -f config.make

@@ -10,7 +10,7 @@ void glXSwapBuffers(Display *dpy, GLXDrawable drawable)
 	glGetIntegerv(GL_READ_BUFFER, &readBuffer);
 
 	glReadBuffer(GL_BACK);
-	glue("yukonCoreCapture", dpy, drawable);
+	glue("glueDrawable", dpy, drawable);
 	glReadBuffer(readBuffer);
 
 	chain(glXSwapBuffers, dpy, drawable);

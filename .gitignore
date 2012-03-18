@@ -1,0 +1,11 @@
+config.make
+sysconf
+
+*.o
+
+libGL.so
+libX11.so
+yukon-core-lib
+
+filter
+stat

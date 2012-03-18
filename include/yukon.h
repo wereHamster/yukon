@@ -2,34 +2,63 @@
 #ifndef __YUKON_H__
 #define __YUKON_H__
 
+#define _FILE_OFFSET_BITS 64
+#define _LARGEFILE_SOURCE
+
 #include <stdarg.h>
+#include <fcntl.h>
+#include <unistd.h>
+#include <dlfcn.h>
+#include <string.h>
+#include <stdio.h>
+#include <stdarg.h>
+#include <stdlib.h>
+#include <stdint.h>
+
+#include <sys/types.h>
+#include <sys/stat.h>
+
 #include <linux/limits.h>
 
-#include <seom/seom.h>
+#include <pthread.h>
 
 #include <X11/Xlib.h>
 #include <X11/keysym.h>
 
+#define GL_GLEXT_PROTOTYPES
 #include <GL/gl.h>
 #include <GL/glext.h>
 #include <GL/glx.h>
 
+#include <stream.h>
+
 void logMessage(unsigned long level, const char *fmt, ...);
 void updateConfiguration(void);
-
-void yukonCoreCapture(Display *dpy, GLXDrawable drawable);
-void yukonCoreEvent(Display *dpy, XEvent *event);
 
 typedef struct {
 	unsigned long logLevel;
 	KeySym hotkey;
 
-	unsigned int insets[4];
 	unsigned int scale;
 	double fps;
-	char output[PATH_MAX];	
+	char output[PATH_MAX];
 } yukonGlobalData;
 
 extern yukonGlobalData yukonGlobal;
+
+struct yukonEngine {
+	struct yukonStream *stream;
+	unsigned long size[2];
+
+	pthread_mutex_t audioMutex;
+	unsigned long audioRunning;
+	pthread_t audioThread;
+};
+
+struct yukonEngine *yukonEngineCreate(const char *spec, unsigned long scale, unsigned long size[2]);
+void yukonEngineCapture(struct yukonEngine *engine);
+struct yukonEngine *yukonEngineDestroy(struct yukonEngine *engine);
+
+void *audioThreadCallback(void *data);
 
 #endif /* __YUKON_H__ */

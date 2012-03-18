@@ -8,7 +8,8 @@ ARCH     = C
 CC       = gcc
 ASM      = yasm
 
-CFLAGS   = -Iinclude -Wall -std=c99 -O3
+CFLAGS   = -Iinclude -I$(PREFIX)/include -Wall -std=c99 -O3
+LDFLAGS  = -L$(PREFIX)/lib
 
 OBJS     = src/core/conf.o src/core/log.o src/stream/stream.o src/core/engine.o \
 		   src/core/opengl.o src/stream/buffer.o \
@@ -32,13 +33,13 @@ $(LIBS):
 	rm -f $@.native
 
 yukon-core-lib: $(OBJS)
-	$(CC) -shared -o $@ $(OBJS) -lasound -lseom
+	$(CC) -shared -o $@ $(OBJS) $(LDFLAGS) -lasound -lseom
 	
 filter: src/filter/main.c src/filter/wav.c src/filter/y4m.c
-	$(CC) $(CFLAGS) -o $@ src/filter/main.c src/filter/wav.c src/filter/y4m.c -lasound -lseom
+	$(CC) $(CFLAGS) -o $@ $^ $(LDFLAGS) -lasound -lseom
 
 stat: src/tools/stat.c
-	$(CC) $(CFLAGS) -o $@ $< -lseom
+	$(CC) $(CFLAGS) -o $@ $^ $(LDFLAGS) -lseom
 
 sysconf:
 	echo 'LDPATH="$(PREFIX)/$(LIBDIR)/yukon"' > $@

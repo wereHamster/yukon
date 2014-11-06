@@ -35,7 +35,7 @@ static void *streamMultiplexerThread(void *data)
 		struct seomPacket *packet = yukonBufferGet(stream->buffer);
 		if (packet == NULL)
 			break;
-		
+
 		switch (packet->type) {
 		case 0x00:
 			memcpy(&header, seomPacketPayload(packet), sizeof(header));
@@ -83,7 +83,7 @@ struct yukonStream *yukonStreamCreate(const char *spec, unsigned long size)
 
 	stream->fileDescriptor = -1;
 	if (strncmp(spec, "file://", 7) == 0) {
-	        printf("[yukonStreamCreate] is a file://!, %s", &spec[7]); 
+	        printf("[yukonStreamCreate] is a file://!, %s", &spec[7]);
 		stream->fileDescriptor = open(&spec[7], O_WRONLY | O_CREAT | O_TRUNC, 0664);
 	} else if (strncmp(spec, "ipv4://", 7) == 0) {
 		struct sockaddr_in addr = {
@@ -99,7 +99,7 @@ struct yukonStream *yukonStreamCreate(const char *spec, unsigned long size)
 			stream->fileDescriptor = -1;
 		}
 	}
-	
+
 	if (stream->fileDescriptor < 0) {
 	        printf("[yukonStreamCreate] fileDescriptor is less than zero, couldn't create file!\n");
 		free(stream);

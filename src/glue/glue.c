@@ -32,7 +32,7 @@ void glueEvent(Display *dpy, XEvent *event)
 
 void glueDrawable(Display *dpy, GLXDrawable drawable)
 {
-	if (hotkeyPressed && engine == NULL) {
+        if (hotkeyPressed && engine == NULL) {
 		hotkeyPressed = 0;
 
 		/* reload configuration in case it changed */
@@ -43,7 +43,7 @@ void glueDrawable(Display *dpy, GLXDrawable drawable)
 		XGetGeometry(dpy, drawable, &root, (int *)&unused, (int *)&unused, &width, &height, &unused, &unused);
 
 		unsigned long size[2] = { width, height };
-		
+
 		/* create the main engine */
 		engine = yukonEngineCreate(yukonGlobal.output, yukonGlobal.scale, size);
 		if (engine) {

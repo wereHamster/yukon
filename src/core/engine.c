@@ -6,12 +6,14 @@ static uint64_t targetInterval;
 struct yukonEngine *yukonEngineCreate(const char *spec, unsigned long scale, unsigned long size[2])
 {
 	struct yukonEngine *engine = malloc(sizeof(struct yukonEngine));
-	if (engine == NULL)
+	if (engine == NULL){
+	        logMessage(4, "[yukonEngineCreate] Couldn't create engine, probably you don't have enough memory\n");
 		return NULL;
+	}
 
 	engine->stream = yukonStreamCreate(spec, 16);
 	if (engine->stream == NULL) {
-		logMessage(4, "Failed to open output stream\n");
+		logMessage(4, "[yukonEngineCreate] Failed to open output stream\n");
 		free(engine);
 		return NULL;
 	}
@@ -62,11 +64,15 @@ void yukonEngineCapture(struct yukonEngine *engine)
 	lastCapture = now;
 
 	struct seomPacket *packet = seomPacketCreate(0x01, engine->size[0] * engine->size[1] * 4);
-	if (packet == NULL)
+	if (packet == NULL){
+	        logMessage(4, "[yukonEngineCapture] seomPacketCreate failed\n");
 		return;
+	}
 
 	glReadPixels(0, 0, engine->size[0], engine->size[1], GL_BGRA, GL_UNSIGNED_BYTE, seomPacketPayload(packet));
+	logMessage(4, "[yukonEngineCapture] glReadPixels succeded\n");
 	yukonStreamPut(engine->stream, packet);
+	logMessage(4, "[yukonEngineCapture] put packed into stream correctly!\n");
 }
 
 struct yukonEngine *yukonEngineDestroy(struct yukonEngine *engine)

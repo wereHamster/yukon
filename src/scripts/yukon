@@ -25,4 +25,6 @@ for DIR in ${SYSDIRS}; do
 	fi
 done
 
+#la linea successiva lancia il programma
+echo "${YLDPATH}:${LD_LIBRARY_PATH}" YUKON="${PROFILE}"
 LD_LIBRARY_PATH="${YLDPATH}:${LD_LIBRARY_PATH}" YUKON="${PROFILE}" "${@}"

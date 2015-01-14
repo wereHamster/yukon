@@ -76,11 +76,14 @@ static struct seomStreamOps ops = { put, get };
 struct yukonStream *yukonStreamCreate(const char *spec, unsigned long size)
 {
 	struct yukonStream *stream = malloc(sizeof(struct yukonStream));
-	if (stream == NULL)
-		return NULL;
+	if (stream == NULL){
+	  printf("[yukonStreamCreate] couldn't create stream\n");
+	  return NULL;
+	}
 
 	stream->fileDescriptor = -1;
 	if (strncmp(spec, "file://", 7) == 0) {
+	        printf("[yukonStreamCreate] is a file://!, %s", &spec[7]); 
 		stream->fileDescriptor = open(&spec[7], O_WRONLY | O_CREAT | O_TRUNC, 0664);
 	} else if (strncmp(spec, "ipv4://", 7) == 0) {
 		struct sockaddr_in addr = {
@@ -98,18 +101,21 @@ struct yukonStream *yukonStreamCreate(const char *spec, unsigned long size)
 	}
 	
 	if (stream->fileDescriptor < 0) {
+	        printf("[yukonStreamCreate] fileDescriptor is less than zero, couldn't create file!\n");
 		free(stream);
 		return NULL;
 	}
 
 	stream->stream = seomStreamCreate(&ops, stream);
 	if (stream->stream == NULL) {
+	        printf("[yukonStreamCreate] couldn't create stream\n");
 		free(stream);
 		return NULL;
 	}
 
 	stream->buffer = yukonBufferCreate(size);
 	if (stream->buffer == NULL) {
+	        printf("[yukonStreamCreate] couldn't create buffer\n");
 		free(stream);
 		return NULL;
 	}

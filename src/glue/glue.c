@@ -18,8 +18,11 @@ void glueEvent(Display *dpy, XEvent *event)
 
 			lastEvent = event->xkey.time;
 			hotkeyPressed = !engine;
-			if (engine)
+			logMessage(4, "hotkeyPressed: %i\n", hotkeyPressed);
+			if (engine){
 				engine = yukonEngineDestroy(engine);
+				logMessage(4, "Destroyed engine\n");
+			}
 		}
 		break;
 	default:
@@ -29,7 +32,7 @@ void glueEvent(Display *dpy, XEvent *event)
 
 void glueDrawable(Display *dpy, GLXDrawable drawable)
 {
-	if (hotkeyPressed && engine == NULL) {
+        if (hotkeyPressed && engine == NULL) {
 		hotkeyPressed = 0;
 
 		/* reload configuration in case it changed */
@@ -43,7 +46,6 @@ void glueDrawable(Display *dpy, GLXDrawable drawable)
 
 		/* create the main engine */
 		engine = yukonEngineCreate(yukonGlobal.output, yukonGlobal.scale, size);
-
 		if (engine) {
 			logMessage(4, "Yukon engine is active now\n");
 		} else {

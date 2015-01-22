@@ -25,4 +25,5 @@ for DIR in ${SYSDIRS}; do
 	fi
 done
 
+echo "${YLDPATH}:${LD_LIBRARY_PATH}" YUKON="${PROFILE}"
 LD_LIBRARY_PATH="${YLDPATH}:${LD_LIBRARY_PATH}" YUKON="${PROFILE}" "${@}"
